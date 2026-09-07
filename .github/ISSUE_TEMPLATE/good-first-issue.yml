@@ -1,0 +1,39 @@
+name: Good first issue proposal
+description: Propose a small, verifiable improvement suitable for a first contribution
+title: "[Good first issue] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping Targilim. Keep the proposal small, testable, and consistent with RULES.md.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is unclear, broken, inaccessible, or unnecessarily hard?
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: How can a contributor prove the change works?
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety and scope
+      options:
+        - label: This proposal contains no student data, credentials, or private information.
+          required: true
+        - label: If this changes mathematical content, I can identify the source backing the change.
+          required: true
