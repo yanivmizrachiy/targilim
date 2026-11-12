@@ -49,10 +49,47 @@
       tri(x0 + 150, h2, s2, h2, false) +
       `<text x="145" y="172" fill="${T.label}" font-size="10.5" font-weight="700" text-anchor="middle">דמיון וצללים</text>`);
   }
-  function congruenceSvg(showTicks) {
+  // Two corresponding triangles carrying exactly the equalities of one theorem:
+  // צ.צ.צ → three side pairs (1/2/3 ticks); צ.ז.צ → two sides (1/2 ticks) and
+  // the angle between them (arc); ז.צ.ז → two angles (1/2 arcs) and the side
+  // between them (tick). `at` rotates which vertex/side carries the marks.
+  function congruenceSvg(thm, at) {
+    const V = [[60, 30], [20, 120], [110, 120]];          // vertices of the base triangle
+    const SIDES = [[0, 1], [1, 2], [2, 0]];                // side k joins V[k] → V[k+1]
+    const ink = T.unknown, k = (at || 0) % 3;
+    function ticks(ox, s, n) {
+      const p = V[SIDES[s][0]], q = V[SIDES[s][1]];
+      const mx = ox + (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+      const len = Math.hypot(q[0] - p[0], q[1] - p[1]), ux = (q[0] - p[0]) / len, uy = (q[1] - p[1]) / len;
+      let out = '';
+      for (let i = 0; i < n; i++) {
+        const o = (i - (n - 1) / 2) * 5, cx = mx + ux * o, cy = my + uy * o;
+        out += `<line x1="${(cx - uy * 6).toFixed(1)}" y1="${(cy + ux * 6).toFixed(1)}" x2="${(cx + uy * 6).toFixed(1)}" y2="${(cy - ux * 6).toFixed(1)}" stroke="${ink}" stroke-width="2"/>`;
+      }
+      return out;
+    }
+    function arcs(ox, v, n) {
+      const p = V[v], a = V[(v + 1) % 3], b = V[(v + 2) % 3];
+      let out = '';
+      for (let i = 0; i < n; i++) {
+        const r = 13 + i * 5;
+        const u1 = [a[0] - p[0], a[1] - p[1]], u2 = [b[0] - p[0], b[1] - p[1]];
+        const l1 = Math.hypot(u1[0], u1[1]), l2 = Math.hypot(u2[0], u2[1]);
+        const x1 = ox + p[0] + u1[0] / l1 * r, y1 = p[1] + u1[1] / l1 * r, x2 = ox + p[0] + u2[0] / l2 * r, y2 = p[1] + u2[1] / l2 * r;
+        let d = Math.atan2(u2[1], u2[0]) - Math.atan2(u1[1], u1[0]);
+        while (d <= -Math.PI) d += 2 * Math.PI; while (d > Math.PI) d -= 2 * Math.PI;
+        out += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 ${d > 0 ? 1 : 0} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${ink}" stroke-width="1.8" data-mark="angle"/>`;
+      }
+      return out;
+    }
+    function marks(ox) {
+      if (thm === 'צ.צ.צ') return ticks(ox, k, 1) + ticks(ox, (k + 1) % 3, 2) + ticks(ox, (k + 2) % 3, 3);
+      if (thm === 'צ.ז.צ') return ticks(ox, k, 1) + ticks(ox, (k + 2) % 3, 2) + arcs(ox, k, 1);       // sides k and k−1 meet at vertex k
+      return arcs(ox, SIDES[k][0], 1) + arcs(ox, SIDES[k][1], 2) + ticks(ox, k, 1);                    // ז.צ.ז: angles at both ends of side k
+    }
     function tri(ox) {
-      return `<polygon points="${ox + 60},30 ${ox + 20},120 ${ox + 110},120" fill="${T.fill}" stroke="${T.stroke}" stroke-width="2" stroke-linejoin="round"/>` +
-        (showTicks ? `<line x1="${ox + 38}" y1="78" x2="${ox + 44}" y2="72" stroke="${T.unknown}" stroke-width="2"/><line x1="${ox + 83}" y1="74" x2="${ox + 89}" y2="80" stroke="${T.unknown}" stroke-width="2"/><line x1="${ox + 60}" y1="122" x2="${ox + 70}" y2="122" stroke="${T.given}" stroke-width="2"/>` : '');
+      return `<polygon points="${V.map(p => (ox + p[0]) + ',' + p[1]).join(' ')}" fill="${T.fill}" stroke="${T.stroke}" stroke-width="2" stroke-linejoin="round"/>` +
+        (thm ? marks(ox) : '');
     }
     return svgWrap(290, 160, tri(10) + tri(150) +
       `<text x="80" y="145" fill="${T.label}" font-size="10" font-weight="700" text-anchor="middle">משולש 1</text>` +
@@ -131,7 +168,8 @@
     const thm = pick([['צ.צ.צ', 'שלוש צלעות מתאימות שוות'], ['צ.ז.צ', 'שתי צלעות והזווית שביניהן שוות'], ['ז.צ.ז', 'שתי זוויות והצלע שביניהן שוות']]);
     const tfTrue = qtype === 'tf' && Math.random() < 0.5;
     const fam = diff === 'basic' ? 'name_theorem' : diff === 'challenge' ? pick(['missing_datum', 'why']) : pick(['name_theorem', 'why']);
-    const svg = congruenceSvg(true);
+    // the drawing shows exactly the equalities of the theorem in the answer
+    const svg = congruenceSvg(thm[0], Math.floor(Math.random() * 3));
     let q, a, cs, isTrue = tfTrue;
     if (fam === 'missing_datum') {
       a = `כדי לטעון חפיפה לפי ${thm[0]} צריך ${thm[1]} — ולוודא שהסימונים תואמים בשני המשולשים.`;

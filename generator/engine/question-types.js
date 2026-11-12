@@ -43,9 +43,26 @@
       .join('');
   }
 
+  // One guard for every engine's multiple choice: never two options with the
+  // same text (a merged duplicate keeps the correct flag); letters re-assigned.
+  // Options are not invented here — a near value could also be a right answer.
+  const LABELS = ['א','ב','ג','ד','ה','ו'];
+  function normalizeChoices(choices){
+    const out = [];
+    (choices || []).forEach(function(c){
+      const key = String(c.text).replace(/\s+/g, ' ').trim();
+      const prev = out.find(function(o){ return o.key === key; });
+      if(prev){ prev.correct = prev.correct || !!c.correct; return; }
+      out.push({ key: key, text: c.text, correct: !!c.correct });
+    });
+    return out.map(function(c, i){ return { label: LABELS[i], text: c.text, correct: c.correct }; });
+  }
+  E.normalizeChoices = normalizeChoices;
+
   E.questionTypes = {
     open: function(o){ return { questionHTML:(o.svg?'<div class="diagram">'+o.svg+'</div>':'')+'<div class="qtext">'+protectMathBidi(o.question)+'</div>', answerHTML:protectMathBidi(o.answer) }; },
     mcq: function(o){
+      o.choices = normalizeChoices(o.choices);
       const html = o.choices.map(c=>'<div class="mcq-choice '+(c.correct?'mcq-correct':'')+'"><span class="mcq-label">'+c.label+'.</span> '+protectMathBidi(c.text)+'</div>').join('');
       return { questionHTML:(o.svg?'<div class="diagram">'+o.svg+'</div>':'')+'<div class="qtext">'+protectMathBidi(o.question)+'</div><div class="mcq-choices">'+html+'</div>', answerHTML:protectMathBidi(o.answer) };
     },
