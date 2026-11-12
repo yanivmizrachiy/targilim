@@ -36,6 +36,45 @@ check('A7-01 tower wording does not expose orphan additive step',
   !/כל כוס נוספת\s+\$\+\$\{x\.step\}/.test(a701) &&
   !/מגדל מכוס אחת/.test(a701));
 
+// A7-03: the student step must actually change the solution. Force each
+// existing one- and two-step case so both signs and zero are always covered.
+function linearStepSolution(expression) {
+  const match = expression?.match(/^(\d*)x([+-]\d+)?=(-?\d+)([+-]\d+)?$/);
+  if (!match) return NaN;
+  const [, coefficient, leftConstant, rightConstant, rightOffset] = match;
+  return (Number(rightConstant) + Number(rightOffset || 0) - Number(leftConstant || 0)) / Number(coefficient || 1);
+}
+
+const originalPick = E.pick;
+const equivalentMistakeSteps = [];
+try {
+  for (const family of ['one_step', 'two_step']) {
+    for (let index = 0; index < 5; index++) {
+      E.pick = list => typeof list[0] === 'string' ? family : list[index];
+      const item = E.generateA703Engine(family === 'one_step' ? 'basic' : 'standard', 'mistake');
+      const [original, proposed] = [...item.questionHTML.matchAll(/\$([^$]+)\$/g)]
+        .map(match => linearStepSolution(match[1]));
+      if (!Number.isFinite(original) || !Number.isFinite(proposed) || original === proposed) {
+        equivalentMistakeSteps.push(family + '#' + index);
+      }
+    }
+  }
+} finally {
+  E.pick = originalPick;
+}
+check('A7-03: each one- and two-step mistake changes the solution', !equivalentMistakeSteps.length, equivalentMistakeSteps.join(', '));
+
+try {
+  E.pick = list => typeof list[0] === 'string' ? 'given_solution' : list[0];
+  const item = E.generateA703Engine('standard', 'open');
+  const formulas = [...item.questionHTML.matchAll(/\$([^$]+)\$/g)].map(match => match[1]);
+  check('A7-03: open equation identification gives the proposed value and four different equations',
+    formulas.length === 5 && new Set(formulas.slice(1)).size === 4 &&
+    formulas.slice(1).filter(equation => item.answerHTML.includes('$$' + equation + '$$')).length === 1);
+} finally {
+  E.pick = originalPick;
+}
+
 function prose(html) {
   return String(html)
     .replace(/<svg[\s\S]*?<\/svg>/g, ' ')

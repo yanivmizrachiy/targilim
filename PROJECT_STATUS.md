@@ -19,6 +19,10 @@ Plan, decisions and milestones: [`docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_202
 - **Measured results (2026-11-12):** `npm run verify:deep` exit 0 locally; new gate `verify:workbook` (in `verify:all`) — 3,600 seeded items per verified topic with 0 checker failures, 61/61 dropdown topics compose clean documents, 61/61 rebuild identically from the document code in a fresh page. Browser harness (Playwright/Chromium, 8 cases incl. a 3-chapter exam, a black-and-white quiz and a runtime legacy topic): print pages = screen sheets = downloaded PDF pages in 8/8, with and without the key; A4 595×842 pt; no clipped sheet or label at 1280 px or 390 px; no answer marker on student sheets; no page errors. Evidence: [`docs/evidence/2026-11-12-workbook-slice/`](docs/evidence/2026-11-12-workbook-slice/README.md).
 - **Still open:** 48 engines not yet in the verified-family contract (M2); intake of the Sep–Oct 2026 re-issued curriculum documents, terminology "שכיחות", grade-placement fixes and the curriculum-plan selector (M3, needs approval); Grade 9 (M4, needs approval); cleanup and a CI browser job (M5); Safari/Firefox and real-printer checks not done. See the plan §4–§5.
 
+## In review — Grade 7 equation corrections
+
+On a branch based on PR #57. A7-03 mistake prompts show a genuinely incorrect step for positive, negative and zero constant terms. Open equation-identification questions include their four candidate equations. Hebrew plurals and explanations were corrected. The math/BiDi verifier exercises the affected generator paths. A7-03 remains in the existing engine; its migration to verified workbook families is pending.
+
 ## Executive snapshot
 
 - Shipped coverage as of this snapshot: Hebrew RTL exercise generation for Grades 7–8. See [`RULES.md`](RULES.md) for product requirements.

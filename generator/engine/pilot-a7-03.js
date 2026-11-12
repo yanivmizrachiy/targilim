@@ -22,9 +22,9 @@
     {item:'ספר',pl:'ספרים',n1:12,d:4,n2:16,x:12},{item:'עט',pl:'עטים',n1:10,d:9,n2:13,x:30}
   ];
   const WORD_BUILD = [
-    {item:'כדור', inc:6, newQty:15, oldQty:18, x:30, eq:'15(x+6)=18x', wrong:['15x+6=18x','15(x-6)=18x','18(x+6)=15x']},
-    {item:'מחברת', inc:4, newQty:12, oldQty:16, x:12, eq:'12(x+4)=16x', wrong:['12x+4=16x','12(x-4)=16x','16(x+4)=12x']},
-    {item:'כרטיס', inc:5, newQty:8, oldQty:10, x:20, eq:'8(x+5)=10x', wrong:['8x+5=10x','8(x-5)=10x','10(x+5)=8x']}
+    {item:'כדור', pl:'כדורים', inc:6, newQty:15, oldQty:18, x:30, eq:'15(x+6)=18x', wrong:['15x+6=18x','15(x-6)=18x','18(x+6)=15x']},
+    {item:'מחברת', pl:'מחברות', inc:4, newQty:12, oldQty:16, x:12, eq:'12(x+4)=16x', wrong:['12x+4=16x','12(x-4)=16x','16(x+4)=12x']},
+    {item:'כרטיס', pl:'כרטיסים', inc:5, newQty:8, oldQty:10, x:20, eq:'8(x+5)=10x', wrong:['8x+5=10x','8(x-5)=10x','10(x+5)=8x']}
   ];
   const GIVEN_SOLUTION = [
     {x:10, eqs:['40x=5x+100','2x-2=x+8','3x+12=100','4x-4=30x+1'], correct:'2x-2=x+8'},
@@ -113,7 +113,7 @@
       return `${ctx}\nבנו משוואה המתארת את המצב ופתרו (מצאו את $x$).`;
     }
     if(family==='word_build'){
-      const base=`מחיר ${x.item} היה $x$ שקלים. לאחר התייקרות של $${x.inc}$ שקלים קנו $${x.newQty}$ ${x.item}ים באותו סכום שבו קנו קודם $${x.oldQty}$ ${x.item}ים.`;
+      const base=`מחיר ${x.item} היה $x$ שקלים. לאחר התייקרות של $${x.inc}$ שקלים קנו $${x.newQty}$ ${x.pl} באותו סכום שבו קנו קודם $${x.oldQty}$ ${x.pl}.`;
       if(qtype==='mcq') return `${base}\nאיזו משוואה מתאימה לסיפור?`;
       if(qtype==='tf') return `${base} המשוואה המתאימה היא $${tfTrue?x.eq:x.wrong[0]}$.`;
       if(qtype==='mistake') return `${base} תלמיד בנה את המשוואה $${x.wrong[0]}$ כי "צריך רק להוסיף ${x.inc}".`;
@@ -123,7 +123,10 @@
       const wrong=x.eqs.find(e=>e!==x.correct);
       if(qtype==='tf') return `המשוואה $${tfTrue?x.correct:wrong}$ היא משוואה שפתרונה $x=${x.x}$.`;
       if(qtype==='mistake') return `תלמיד סימן שהמשוואה $${wrong}$ היא משוואה שפתרונה $x=${x.x}$ בלי להציב ולבדוק.`;
-      return `סמנו את המשוואה שפתרונה הוא $x=${x.x}$.`;
+      const prompt = `איזו משוואה פתרונה $x=${x.x}$?`;
+      if(qtype==='mcq') return prompt;
+      const equations = x.eqs.map(eq => tex(eq)).join('\n');
+      return prompt + ' בדקו בהצבה.\n' + equations;
     }
     if(family==='missing_box'){
       if(qtype==='tf') return `במשוואה $${x.eq}$, כדי שהפתרון יהיה $x=${x.x}$ צריך לכתוב במשבצת $${tfTrue?x.box:x.box+1}$.`;
@@ -137,8 +140,11 @@
     }
     if(qtype==='tf') return `פתרון המשוואה $${eq}$ הוא $x=${tfTrue?x.x:x.x+1}$.`;
     if(qtype==='mistake'){
-      if(family==='parens') return `במשוואה $${eq}$ תלמיד פתח סוגריים: "$${x.k}x+${x.b}=${x.c}$" — הכפיל רק את $x$.`;
-      return `במשוואה $${eq}$ תלמיד העביר אגף: "$${x.a}x=${x.c}+${Math.abs(x.b)}$" — בלי להפוך סימן.`;
+      if(family==='parens') return `במשוואה $${eq}$ תלמיד פתח סוגריים: "$${x.k}x+${x.b}=${x.c}$".`;
+      if(x.b===0) return `במשוואה $${eq}$ תלמיד כתב שהפתרון הוא $x=${x.c}$.`;
+      const signedB = x.b > 0 ? '+' + x.b : String(x.b);
+      const lhs = x.a === 1 ? 'x' : x.a + 'x';
+      return `במשוואה $${eq}$ תלמיד כתב $${lhs}=${x.c}${signedB}$.`;
     }
     return `פתרו את המשוואה ובדקו:\n$$${eq}$$`;
   }
@@ -152,8 +158,9 @@ $$${c.m}x${c.a>=0?'+'+c.a:''+c.a}=${nx}${c.b>=0?'+'+c.b:''+c.b}$$
 בשאר המשוואות הצבת $x=${x.s}$ אינה מאזנת בין שני האגפים.`;
     }
     if(family==='word_eq'){
-      const wrong = qtype==='mistake' || (qtype==='tf' && !tfTrue);
-      const prefix = wrong ? 'שגוי — ההתייקרות חלה על כל פריט, ולכן כופלים $(x+'+x.d+')$ במספר הפריטים.\n' : '';
+      let prefix = '';
+      if(qtype==='mistake') prefix = 'הטעות: ההתייקרות חלה על כל פריט, ולכן כופלים $(x+'+x.d+')$ במספר הפריטים.\n';
+      if(qtype==='tf' && !tfTrue) prefix = 'המחיר שהוצע אינו מקיים את השוויון בין הסכומים.\n';
       return `${prefix}מסמנים את המחיר המקורי ב-$x$; המחיר לאחר התייקרות הוא $x+${x.d}$.
 המשוואה: $$${x.n1}(x+${x.d})=${x.n2}x$$
 $$${x.n1}x+${x.n1*x.d}=${x.n2}x \\;\\Rightarrow\\; ${x.n1*x.d}=${x.n2-x.n1}x \\;\\Rightarrow\\; x=\\frac{${x.n1*x.d}}{${x.n2-x.n1}}=${x.x}$$
@@ -201,7 +208,11 @@ $$\\Box=${x.c}-${x.a*x.x}=${x.box}$$`;
       const prefix = wrong ? 'שגוי — חוק הפילוג: מכפילים את שני האיברים בסוגריים.\n' : '';
       return `${prefix}$$${x.k}(x+${x.b})=${x.c}$$\n$$${x.k}x+${x.k*x.b}=${x.c}$$\n$$${x.k}x=${x.c-x.k*x.b}$$\n$$x=${x.x}$$\nבדיקה: $${x.k}(${x.x}+${x.b})=${x.k}\\cdot ${x.x+x.b}=${x.c}$ ✓`;
     }
-    const prefix = wrong ? 'שגוי — בהעברת אגף הסימן מתהפך.\n' : '';
+    let prefix = '';
+    if(qtype==='mistake') prefix = x.b===0
+      ? 'הטעות: כדי לבודד את המשתנה יש לחלק את שני אגפי המשוואה במקדם שלו.\n'
+      : 'הטעות: כדי לבטל את האיבר החופשי יש לבצע את הפעולה ההפוכה בשני האגפים.\n';
+    if(qtype==='tf' && !tfTrue) prefix = 'הצבת הערך שבטענה נותנת שני אגפים שונים.\n';
     if(x.a===1){
       return `${prefix}$$x=${x.c}${x.b>=0?'-'+x.b:'+'+(-x.b)}=${x.x}$$\nבדיקה: $${x.x}${x.b>=0?'+'+x.b:'-'+(-x.b)}=${x.c}$ ✓`;
     }
