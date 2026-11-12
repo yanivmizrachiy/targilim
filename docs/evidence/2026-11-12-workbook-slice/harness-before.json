@@ -1,0 +1,72 @@
+{
+ "geometry-pythagoras": {
+  "print_pdf": {
+   "pages": 3,
+   "text_chars": 922
+  },
+  "print_pdf_with_key": {
+   "pages": 6,
+   "text_chars": 1678
+  },
+  "cards": 6,
+  "answer_marker_in_student_dom": 2,
+  "desktop_errors": [],
+  "phone_errors": []
+ },
+ "algebra-equations": {
+  "print_pdf": {
+   "pages": 2,
+   "text_chars": 730
+  },
+  "print_pdf_with_key": {
+   "pages": 4,
+   "text_chars": 1341
+  },
+  "cards": 6,
+  "answer_marker_in_student_dom": 2,
+  "desktop_errors": [],
+  "phone_errors": []
+ },
+ "numeric-percent": {
+  "print_pdf": {
+   "pages": 4,
+   "text_chars": 852
+  },
+  "print_pdf_with_key": {
+   "pages": 5,
+   "text_chars": 1215
+  },
+  "cards": 6,
+  "answer_marker_in_student_dom": 2,
+  "desktop_errors": [],
+  "phone_errors": []
+ },
+ "uncertainty-frequency": {
+  "print_pdf": {
+   "pages": 4,
+   "text_chars": 1049
+  },
+  "print_pdf_with_key": {
+   "pages": 6,
+   "text_chars": 1757
+  },
+  "cards": 6,
+  "answer_marker_in_student_dom": 2,
+  "desktop_errors": [],
+  "phone_errors": []
+ },
+ "algebra-slope-graph": {
+  "print_pdf": {
+   "pages": 3,
+   "text_chars": 900
+  },
+  "print_pdf_with_key": {
+   "pages": 4,
+   "text_chars": 1392
+  },
+  "cards": 6,
+  "answer_marker_in_student_dom": 2,
+  "desktop_errors": [],
+  "phone_errors": []
+ }
+}

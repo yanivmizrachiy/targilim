@@ -1,0 +1,535 @@
+{
+ "geometry-pythagoras": {
+  "state": {
+   "sheets": 3,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 5,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — פיתגורס K7M2QF.pdf",
+  "download": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 3,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "algebra-equations": {
+  "state": {
+   "sheets": 2,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 2,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 4,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — משוואות מדרגה ראשונה K7M2QF.pdf",
+  "download": {
+   "pages": 2,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 2,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "numeric-percent": {
+  "state": {
+   "sheets": 2,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 2,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 4,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — אחוזים סטטיים K7M2QF.pdf",
+  "download": {
+   "pages": 2,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 2,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "uncertainty-frequency": {
+  "state": {
+   "sheets": 5,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 5,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 7,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — טבלת תדירות K7M2QF.pdf",
+  "download": {
+   "pages": 5,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 5,
+   "keySheets": 2,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "algebra-slope-graph": {
+  "state": {
+   "sheets": 3,
+   "keySheets": 1,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 4,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — שיפוע ומשוואת ישר K7M2QF.pdf",
+  "download": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 3,
+   "keySheets": 1,
+   "cards": 6,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "exam-grade8-multi": {
+  "state": {
+   "sheets": 4,
+   "keySheets": 2,
+   "cards": 9,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 3,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 4,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 6,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "מבחן — אחוזים סטטיים · שיפוע ומשוואת ישר · ממוצע, חציון, טווח K7M2QF.pdf",
+  "download": {
+   "pages": 4,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 4,
+   "keySheets": 2,
+   "cards": 9,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 3,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "quiz-pythagoras-bw": {
+  "state": {
+   "sheets": 3,
+   "keySheets": 2,
+   "cards": 5,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 5,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "בוחן — פיתגורס K7M2QF.pdf",
+  "download": {
+   "pages": 3,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 3,
+   "keySheets": 2,
+   "cards": 5,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ },
+ "legacy-inequalities": {
+  "state": {
+   "sheets": 1,
+   "keySheets": 1,
+   "cards": 4,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "1.0000",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  },
+  "print": {
+   "pages": 1,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "print_key": {
+   "pages": 2,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "download_name": "דף תרגילים — אי־שוויונות ומגבלות K7M2QF.pdf",
+  "download": {
+   "pages": 1,
+   "sizes_pt": [
+    [
+     595,
+     842
+    ]
+   ]
+  },
+  "image": "targil-matematika-1.png",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()",
+   "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "phone": {
+   "sheets": 1,
+   "keySheets": 1,
+   "cards": 4,
+   "clipped": 0,
+   "scaled": 0,
+   "leak": false,
+   "rawTex": false,
+   "undef": false,
+   "chapters": 0,
+   "zoom": "0.4559",
+   "hscroll": false,
+   "seed": "K7M2QF",
+   "figLabelsOutside": 0
+  }
+ }
+}

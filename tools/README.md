@@ -5,6 +5,8 @@
 ## 1. ספריית טעינה משותפת
 - **`engine-load.mjs`** — טוען את כל ערכת המנועים (DOM stub, VM) ומחזיר
   `{ E, Teacher, pilotIds, sourceFitIds, callEngine }`. כל ה-verifiers מייבאים אותו.
+- **`workbook-load.mjs`** — טוען את הדף האמיתי: כל סקריפטי `generator/index.html` לפי הסדר ואחריהם
+  הנושאים ש-`phase2-loader.js` מוסיף בזמן ריצה (61 נושאים). מחזיר `{ W, E, run, topics }`.
 
 ## 2. verifiers שמחווטים ל-`verify:deep` (36)
 מורצים אוטומטית ב-`npm run verify:deep` (וב-CI). ראו `package.json` → `verify:all` / `verify:deep`.
@@ -16,6 +18,9 @@
 `verify-baseline-protection`, `verify-branding`, `verify-readonly-verifiers`,
   `verify-math-bidi-quality` (כולל עברית/כיווניות וציורי יחס/מגדל כוסות),
 `verify-real-generator-runtime`, `verify-topic-dropdown-clean` ועוד.
+`verify-workbook` (`verify:workbook`, חלק מ-`verify:all`): משפחות מאומתות בהרצות מזורעות מול בודק בלתי תלוי,
+מסמך תקין לכל 61 הנושאים בלי תשובה בצד התלמיד, שחזור לפי קוד דף, תוכניות רמה/ניקוד/פרקים,
+וחוזי הדף A4, ההדפסה וה-PDF.
 `verify-source-fit` כולל גם guard נגד חזרת מיפוי ישן של `A7-04/A7-05`.
 
 ## 3. מחוללי תיעוד (gen-*) — מורצים ידנית

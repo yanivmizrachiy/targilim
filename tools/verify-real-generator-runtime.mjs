@@ -97,7 +97,11 @@ const files = ['generator/core.js','generator/numeric.js',
   'generator/engine/themes.js','generator/engine/random.js','generator/engine/validators.js',
   'generator/engine/diagrams.js','generator/engine/question-types.js']
   .concat(fs.readdirSync('generator/engine').filter(f=>f.startsWith('pilot-')).sort().map(f=>'generator/engine/'+f))
-  .concat(['generator/engine/pattern-engine.js','generator/exercise-set.js']);
+  .concat(['generator/engine/pattern-engine.js',
+    // the document layer's seeded + verified generation (workbook core)
+    'generator/workbook/rng.js','generator/workbook/figures.js','generator/workbook/items.js',
+    'generator/workbook/families/pythagoras.js','generator/workbook/families/percent.js',
+    'generator/exercise-set.js']);
 let loadError = null;
 for (const f of files) {
   try { vm.runInContext(read(f), sandbox, {filename:f}); }
@@ -147,16 +151,32 @@ if (!loadError) {
   check('legacy topic produces a 5-exercise set', (els.out.innerHTML.match(/ex-card/g)||[]).length === 5);
   check('no undefined/NaN in legacy set', !BAD.test(els.out.innerHTML));
 
-  // count=1 keeps the single-card path (qcard + export bar).
-  // Reset qtype explicitly so this test proves the real mixed→specific→mixed restore path.
+  // count=1 is a one-exercise document (RULES.md: one document model for the
+  // book, print and PDF), still with its copy/download-as-image actions.
+  // Intentional change from the former single-card path (PR: workbook slice).
   els.st.value='N7-03-ENGINE';
   els.st.options=[{textContent:'מספרים שליליים — גרסה חכמה ✦'}];
   els.sn.value='1';
   els.selQType.value='mixed';
   vm.runInContext('generate()', sandbox);
   html = els.out.innerHTML;
-  check('count=1 keeps single qcard with export bar', html.includes('qcard') && html.includes('copyImg') && !html.includes('ex-card'));
+  check('count=1 renders one numbered exercise with image export',
+    (html.match(/class="qcard engine-card ex-card"/g)||[]).length === 1 && html.includes('תרגיל 1') &&
+    html.includes('exImageCopy(0') && html.includes('exImageDownload(0') && (html.match(/ak-item/g)||[]).length === 1);
   check('count=1 with mixed restores selector', els.selQType.value === 'mixed');
+
+  // Verified families: seeded replay and answer isolation through the real runtime.
+  const W = sandbox.TargilimWorkbook;
+  check('workbook core loaded (seeded rng + verified families)', !!(W && W.rng && W.families && W.families['G7-03-ENGINE'] && W.families['N8-04-ENGINE']));
+  els.st.value='G7-03-ENGINE'; els.st.options=[{textContent:'פיתגורס'}]; els.sn.value='8'; els.selQType.value='mcq';
+  els.sseed = makeEl({value:'K7M2QF'});
+  vm.runInContext('generate()', sandbox);
+  const first = els.out.innerHTML;
+  vm.runInContext('generate()', sandbox);
+  check('same settings + document code rebuild the identical document', first === els.out.innerHTML && first.includes('K7M2QF'));
+  const student = first.split('id="answerKey"')[0];
+  check('student pages carry no answer markers (verified mcq)', !/mcq-correct|tf-verdict/.test(student) && /התשובה הנכונה: [אבגד]/.test(first));
+  els.selQType.value='mixed'; els.sseed = makeEl({value:''});
 }
 
 console.log(fails ? 'REAL_GENERATOR_RUNTIME_VERIFY_FAIL ('+fails+')' : 'REAL_GENERATOR_RUNTIME_VERIFY_PASS');

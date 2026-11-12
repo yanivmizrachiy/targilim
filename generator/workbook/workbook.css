@@ -1,0 +1,308 @@
+/* generator/workbook/workbook.css
+   The digital book: A4 sheets on screen = print pages = PDF pages.
+   Sheet anatomy follows the district Pythagoras reader (white paper, Rubik,
+   blue title over a 4px double rule, circled page number, 1.35px #1f2a44
+   answer boxes, a 3px dark divider between sheets on screen only).
+   Everything inside a sheet is scoped to .wb-flow and fully specified, so
+   older card/print/mobile rules can never change a sheet's layout (that would
+   break the measured pagination). */
+
+.exset {
+  --wb-font: "Rubik", "Assistant", "Noto Sans Hebrew", Arial, sans-serif;
+  --wb-ink: #0f172a;
+  --wb-title: #1d4ed8;
+  --wb-box: #1f2a44;
+  --wb-grid: #cbd5e1;
+  --wb-line: #e2e8f0;
+  --wb-subtle: #f8fafc;
+  --wb-muted: #475569;
+  --wb-divider: #0f172a;
+  --wb-key: #166534;
+  --wb-ch0: #1d4ed8; --wb-ch1: #0f766e; --wb-ch2: #b45309; --wb-ch3: #7c3aed;
+  --wb-ch4: #be123c; --wb-ch5: #15803d; --wb-ch6: #0369a1;
+  position: relative;
+}
+.exset.wb-bw { --wb-title: #000000; --wb-box: #000000; --wb-key: #000000; --wb-muted: #333333; }
+.exset.wb-pending { visibility: hidden; }
+.exset .wb-measure { display: block !important; position: absolute !important; top: 0; inset-inline-start: 0; visibility: hidden; pointer-events: none; }
+.wb-key-state { display: none !important; }
+.exset:not(.show-key) .wb-key-page,
+.exset:not(.show-key) .wb-key-sep { display: none; }
+
+@media (min-width: 640px) {
+  main { max-width: 900px; }
+}
+
+/* ── Settings card additions ── */
+.settings-card .topic-pick { display: flex; gap: 6px; align-items: stretch; }
+.settings-card .topic-pick select { flex: 1 1 auto; min-width: 0; }
+.btn-add-topic {
+  flex: none;
+  min-height: 44px;
+  width: auto;
+  padding: 0 10px;
+  border: 1.5px solid #c7d7f5;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-add-topic:hover { background: #eff6ff; }
+.settings-card input[type="text"] {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 500;
+  color: #0f172a;
+  text-align: center;
+  text-transform: uppercase;
+}
+.settings-card input[type="text"]:focus { outline: 2px solid #93c5fd; outline-offset: 1px; background: #ffffff; }
+.topic-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+.topic-list-label { font-size: .8rem; color: #475569; font-weight: 500; }
+.topic-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 999px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; font-size: .85rem; }
+.topic-chip-x { border: 0; background: none; color: #1e3a8a; width: 28px; min-height: 28px; height: 28px; border-radius: 50%; font-size: 1rem; line-height: 1; cursor: pointer; padding: 0; }
+.topic-chip-x:hover { background: #dbeafe; }
+.settings-note { margin: 0 0 12px; padding: 6px 10px; border-radius: 8px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: .85rem; }
+.settings-card .engine-panel { background: none; box-shadow: none; border: 0; border-radius: 0; padding: 0; margin: 0 0 12px; }
+@media (min-width: 480px) { .settings-card .engine-panel-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .settings-card .btn-add-topic, .settings-card .topic-chip-x { width: auto; } }
+
+/* ── One action bar (screen only) ── */
+.wb-toolbar {
+  position: sticky;
+  top: 70px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  max-width: 210mm;
+  background: rgba(255, 255, 255, .97);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+}
+.wb-toolbar-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.wb-toolbar .qmeta { margin: 0; padding: 0; border: 0; }
+.wb-toolbar .exset-actions { margin: 0; padding: 0; border: 0; gap: 8px; }
+.wb-toolbar .btn-key, .wb-toolbar .btn-printset { height: 40px; }
+.tag.seed-tag { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; font-variant-numeric: tabular-nums; }
+.exset-note { font-size: .82rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 4px 10px; }
+.wb-chapters { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.wb-chapter-link {
+  border: 0;
+  border-inline-start: 4px solid var(--chapter, #1d4ed8);
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-height: 34px;
+  font: 500 .85rem/1.3 var(--wb-font);
+  cursor: pointer;
+}
+.wb-chapter-link:hover, .wb-chapter-link:focus-visible { background: #eef2ff; }
+/* phones: one compact row that scrolls with the page (the header is already sticky) */
+@media (max-width: 768px) {
+  .wb-toolbar { position: static; padding: 8px; gap: 6px; }
+  .wb-toolbar .qmeta { display: none; }
+  .wb-toolbar .exset-actions { display: flex; flex-wrap: nowrap; width: 100%; }
+  .wb-toolbar .exset-actions button { flex: 1 1 0; width: auto; min-height: 40px; height: 40px; padding: 0 6px; font-size: .85rem; border-radius: 10px; }
+}
+
+/* ── Sheets ── */
+.wb-viewport { position: relative; width: 100%; overflow: hidden; }
+.wb-pages {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 210mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%) scale(var(--wb-zoom, 1));
+  transform-origin: 50% 0;
+}
+.wb-page {
+  position: relative;
+  flex: none;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  background: #ffffff;
+  color: var(--wb-ink);
+}
+.wb-sep { flex: none; width: 210mm; height: 3px; background: var(--wb-divider); }
+.wb-page-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10mm 17mm 7mm;
+}
+.wb-sheet-head {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4mm;
+  padding: 0 0 6px;
+  margin: 0 0 9px;
+  border-bottom: 4px double var(--wb-title);
+}
+.wb-sheet-title { margin: 0; font: 400 24px/1.25 var(--wb-font); color: var(--wb-title); }
+.wb-page-no {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--wb-title);
+  border-radius: 50%;
+  font: 500 15px/1 var(--wb-font);
+  color: var(--wb-title);
+  font-variant-numeric: tabular-nums;
+}
+.wb-footer {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 6mm;
+  font: 400 11px/1 var(--wb-font);
+  color: var(--wb-muted);
+}
+
+/* ── Content flow (identical in measurement, screen, print and PDF) ── */
+.wb-flow {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  overflow: hidden;
+  font: 400 16px/1.6 var(--wb-font);
+  color: var(--wb-ink);
+  text-align: right;
+}
+.wb-flow > * { flex: none; margin: 0; }
+.wb-flow .exset-head { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.wb-flow .exset-title { display: none; }
+.wb-flow .exset-nameline { display: block; margin: 0; padding: 0; font: 400 15px/1.7 var(--wb-font); color: var(--wb-ink); }
+.wb-flow .exset-score { margin: 1mm 0 0; font: 500 15px/1.7 var(--wb-font); color: var(--wb-ink); }
+.wb-flow .exset-instructions { margin: 1mm 0 0; padding: 0 5mm 0 0; font: 400 14px/22px var(--wb-font); color: var(--wb-ink); }
+
+.wb-flow .wb-chapter {
+  display: flex;
+  align-items: baseline;
+  gap: 2.5mm;
+  margin: 0;
+  padding: 1mm 0 1.5mm;
+  border-bottom: 1.35px solid var(--wb-grid);
+  font: 500 19px/1.3 var(--wb-font);
+  color: var(--wb-title);
+}
+.wb-flow .wb-chapter-n { font: 400 14px/1.3 var(--wb-font); color: var(--wb-muted); }
+
+.wb-flow .ex-card {
+  width: auto;
+  margin: 0;
+  padding: 0 0 1mm;
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--wb-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  break-inside: avoid;
+}
+.wb-flow .ex-card .qmeta { display: flex; align-items: baseline; gap: 2mm; margin: 0 0 1mm; padding: 0; border: 0; }
+.wb-flow .ex-num { display: inline; padding: 0; border-radius: 0; background: none; color: var(--wb-title); font: 500 17px/1.35 var(--wb-font); }
+.wb-flow .ex-points { font: 400 13px/1.35 var(--wb-font); color: var(--wb-muted); }
+.wb-flow .ex-body { font: 400 16px/1.6 var(--wb-font); overflow-wrap: normal; }
+.wb-flow .qtext { margin: 0 0 1.5mm; font: 400 16px/1.6 var(--wb-font); color: var(--wb-ink); white-space: pre-line; overflow-wrap: normal; }
+.wb-flow .qtext .katex, .wb-flow .mcq-choice .katex { font-size: 1.06em; }
+.wb-flow .katex-display { margin: 1mm 0; }
+.wb-flow .diagram { display: flex; justify-content: center; margin: 1mm 0 2.5mm; overflow: visible; }
+.wb-flow .diagram svg { display: block; max-width: 100%; height: auto; }
+.wb-flow .diagram svg.wb-fig { font-family: var(--wb-font); }
+
+/* narrow drawing beside the text (RTL: text right, drawing left) */
+.wb-flow .ex-card.fig-side .ex-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 7mm; align-items: start; }
+.wb-flow .ex-card.fig-side .ex-body > * { grid-column: 1; }
+.wb-flow .ex-card.fig-side .ex-body > .diagram { grid-column: 2; grid-row: 1 / span 8; margin: 0; }
+.wb-flow .mcq-choices.mcq-long { grid-template-columns: minmax(0, 1fr); }
+
+.wb-flow .mcq-instruction { margin: 0 0 1.5mm; font: 400 13.5px/1.4 var(--wb-font); color: var(--wb-muted); }
+.wb-flow .mcq-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5mm 6mm; margin: 0; }
+.wb-flow .mcq-choice {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  margin: 0;
+  padding: 1mm 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 400 16px/1.5 var(--wb-font);
+  color: var(--wb-ink);
+}
+.wb-flow .mcq-choice::before { content: ""; flex: none; width: 19px; height: 19px; border: 1.35px solid var(--wb-box); border-radius: 4px; }
+.wb-flow .mcq-label { margin: 0; font-weight: 500; color: var(--wb-ink); }
+.wb-flow .tf-statement { margin: 0 0 1mm; padding: 2mm 3mm; border: 0; border-inline-start: 1mm solid var(--wb-title); border-radius: 0; background: var(--wb-subtle); }
+.wb-flow .tf-label { margin: 0 0 0 1.5mm; font-weight: 500; color: var(--wb-ink); }
+.wb-flow .mistake-prompt { margin: 0 0 1.5mm; font: 500 15px/1.4 var(--wb-font); color: var(--wb-ink); }
+.wb-flow .mistake-box { margin: 0 0 1.5mm; padding: 2mm 3mm; border: 1.35px dashed #64748b; border-radius: 2mm; background: #ffffff; }
+
+.wb-flow .answer-box { margin: 1mm 0 0; border: 1.35px solid var(--wb-box); border-radius: 8px; background: #ffffff; box-shadow: none; overflow: hidden; }
+.wb-flow .answer-box-body { padding: 0 4mm; }
+.wb-flow .answer-box .wl { height: 8.5mm; border-bottom: 1px solid var(--wb-grid); }
+.wb-flow .answer-box .wl:last-child { border-bottom-color: transparent; }
+
+.wb-flow .engine-table { margin: 1mm auto; font: 400 13.5px/1.3 var(--wb-font); }
+.wb-flow .engine-table th, .wb-flow .engine-table td { border: 1px solid var(--wb-grid); padding: 4px 12px; height: 30px; color: var(--wb-ink); font-weight: 400; background: #ffffff; }
+.wb-flow .engine-table th { background: var(--wb-subtle); font-weight: 500; }
+
+/* image actions live in the gap under each exercise; same height everywhere */
+.wb-flow .ex-imgbar { display: flex; align-items: center; justify-content: center; gap: 3mm; height: 8mm; margin: 1mm 0 0; padding: 0; border: 0; }
+.wb-flow .ex-imgbar .btn-img { width: auto; min-height: 0; height: 7mm; padding: 0 4mm; border-radius: 999px; font: 500 12.5px/1 var(--wb-font); }
+
+/* answer key sheets */
+.wb-flow .ak-item { margin: 0; padding: 0 0 2mm; border-bottom: 1px solid var(--wb-line); }
+.wb-flow .ak-num { margin: 0 0 1mm; font: 500 15px/1.4 var(--wb-font); color: var(--wb-title); }
+.wb-flow .ak-correct { margin: 0 0 1mm; font: 500 14px/1.4 var(--wb-font); color: var(--wb-key); }
+.wb-flow .ak-body { font: 400 14px/1.6 var(--wb-font); color: var(--wb-ink); white-space: pre-line; }
+.wb-flow .ak-body .tf-verdict { margin: 0; font-weight: 500; color: var(--wb-key); }
+.wb-flow .ak-body .diagram svg { max-width: 70%; }
+
+/* capture mode: sheets at 100%, image buttons kept as blank space (= print) */
+.wb-capture .wb-viewport { height: auto !important; overflow: visible !important; }
+.wb-capture .wb-pages { position: static !important; transform: none !important; margin: 0 auto; }
+.wb-capture .wb-flow .ex-imgbar { visibility: hidden; }
+
+/* ── Print: the sheets themselves, nothing else ── */
+@page { size: A4; margin: 0; }
+@media print {
+  html, body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
+  main { max-width: none !important; width: auto !important; margin: 0 !important; padding: 0 !important; }
+  .wb-toolbar, .wb-sep, .wb-measure, #out > :not(.exset) { display: none !important; }
+  .exset { margin: 0 !important; padding: 0 !important; }
+  .wb-viewport { height: auto !important; overflow: visible !important; }
+  .wb-pages { position: static !important; transform: none !important; display: block !important; width: auto !important; }
+  .wb-page { margin: 0 !important; box-shadow: none !important; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .wb-sep + .wb-page { break-before: page; }
+  .wb-flow .ex-imgbar { display: flex !important; visibility: hidden !important; }
+  .wb-flow .ex-card { border-bottom: 1px solid var(--wb-line) !important; padding: 0 0 1mm !important; }
+}

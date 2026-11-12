@@ -111,7 +111,7 @@
   E.updatePanel = function(){
     const st = document.getElementById('st');
     const panel = document.getElementById('enginePanel');
-    if(panel && st) panel.style.display = ENGINE_TOPIC_IDS.indexOf(st.value) >= 0 ? 'block' : 'none';
+    if(panel && st) panel.style.display = E.isEngineTopic(st.value) ? 'block' : 'none'; // full registry (all 50), not the first 25
   };
 
   if(typeof TOPICS !== 'undefined' && TOPICS[7] && TOPICS[7].geometry && !TOPICS[7].geometry.some(t=>t[0]==='G7-03-ENGINE')){
