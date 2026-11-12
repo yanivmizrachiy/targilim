@@ -52,11 +52,17 @@
     return {s:s, opts:E.shuffle(opts)};
   }
 
-  function pickFamily(diff){
-    if(diff === 'basic') return E.pick(['one_step','verify']);
-    if(diff === 'challenge') return E.pick(['parens','two_step','word_eq','identify_eq','word_build','given_solution','missing_box']);
-    return E.pick(['one_step','two_step','parens','verify','word_eq','word_build','given_solution','missing_box']);
+  function pickFamily(diff, pick){
+    if(diff === 'basic') return pick(['one_step','verify']);
+    if(diff === 'challenge') return pick(['parens','two_step','word_eq','identify_eq','word_build','given_solution','missing_box']);
+    return pick(['one_step','two_step','parens','verify','word_eq','word_build','given_solution','missing_box']);
   }
+  E.selectA703Family = function(diff, qtype, pick){
+    const family = pickFamily(diff, pick);
+    if(qtype==='tf' && family==='verify') return 'two_step';
+    if(qtype!=='mcq' && family==='identify_eq') return 'word_eq';
+    return family;
+  };
   function pickCase(f){
     if(f==='two_step') return E.pick(TWO_STEP);
     if(f==='parens') return E.pick(PARENS);
@@ -224,9 +230,7 @@ $$\\Box=${x.c}-${x.a*x.x}=${x.box}$$`;
 
   E.generateA703Engine = function(difficulty, questionType){
     difficulty = difficulty || 'standard'; questionType = questionType || 'open';
-    let family = pickFamily(difficulty);
-    if(questionType==='tf' && family==='verify') family = 'two_step';
-    if(questionType!=='mcq' && family==='identify_eq') family = 'word_eq';
+    const family = E.selectA703Family(difficulty, questionType, E.pick);
     const x = pickCase(family);
     const tfTrue = questionType==='tf' && Math.random()<0.5;
     const q = question(family,x,questionType,tfTrue), a = answer(family,x,questionType,tfTrue);

@@ -81,7 +81,7 @@ for (const t of page.topics) {
     if (/undefined|NaN|\[object/.test(e.questionHTML + e.answerHTML)) problems.push(t.id + ': undefined/NaN');
     if (/mcq-correct|tf-verdict/.test(e.questionHTML)) problems.push(t.id + ': answer marker on the student side');
     if (/class="mcq-choices"/.test(e.questionHTML) && !(e.correctLabels && e.correctLabels.length)) problems.push(t.id + ': MCQ without key');
-    if (W.families[t.id] && !e.verified) problems.push(t.id + ': verified topic produced an unverified item');
+    if (W.families[t.id] && !W.families[t.id].selectFamily && !e.verified) problems.push(t.id + ': verified topic produced an unverified item');
   });
 }
 check('every topic: 6 numbered exercises, no answer on the student side, MCQ keys present', problems.length === 0, problems.slice(0, 8).join(' | '));
@@ -98,6 +98,36 @@ for (const t of page.topics) {
   if (doc.exercises.map(ex => ex.questionHTML + '||' + ex.answerHTML).join('##') !== docs[t.id]) differ.push(t.id);
 }
 check('replay: same settings + code rebuild the same document in a fresh page (' + page.topics.length + ' topics)', differ.length === 0, differ.join(', '));
+
+const equationId = 'A7-03-ENGINE';
+const equation = W.families[equationId];
+check('A7-03: three equation families registered', equation?.families.join() === 'one_step,two_step,parentheses_equation');
+if (equation) {
+  const covered = new Set();
+  let legacyCount = 0;
+  let failures = 0;
+  for (const level of LEVELS) for (const qtype of QTYPES) {
+    for (const family of equation.families) {
+      for (let seed = 0; seed < 20; seed++) {
+        const item = equation.generate(W.rng.createRng(family + seed), level, qtype, { family });
+        if (equation.verify(item, {}).length) failures++;
+      }
+    }
+    const request = { ...base, grade: 7, topics: [equationId], level, qtype, count: 10 };
+    const doc = compose(request);
+    if (doc.exercises.length !== request.count || JSON.stringify(doc) !== JSON.stringify(compose(request))) failures++;
+    for (const exercise of doc.exercises) {
+      if (exercise.verified) covered.add(exercise.familyId);
+      else legacyCount++;
+    }
+  }
+  const valid = equation.generate(W.rng.createRng('mutation'), 'standard', 'open', {});
+  const invalid = { ...valid, answer: { value: valid.answer.value + 1 } };
+  check('A7-03: explicit cases pass and changing the solution is rejected',
+    failures === 0 && equation.verify(invalid, {}).length > 0, String(failures));
+  check('A7-03: workbook renders all three verified families and keeps legacy exercises',
+    covered.size === 3 && legacyCount > 0, [...covered].join(', ') + ' / legacy: ' + legacyCount);
+}
 
 // ── 4. teacher options ──
 const plan = (l, p, n) => run('levelPlan(' + JSON.stringify(l) + ',' + JSON.stringify(p) + ',' + n + ')');
@@ -139,7 +169,7 @@ check('print: only the sheets (toolbar and dividers hidden), one sheet per page'
 check('print keeps the image-button space (screen pagination = print pagination)', /\.wb-flow \.ex-imgbar\s*\{\s*display:\s*flex\s*!important;\s*visibility:\s*hidden\s*!important;/.test(print));
 check('answer key sheets hidden unless shown', /\.exset:not\(\.show-key\) \.wb-key-page/.test(css));
 check('PDF/image capture libraries pinned with SRI', /@zumer\/snapdom@3\.7\.4\/dist\/snapdom\.js/.test(cap) && /jspdf\/4\.2\.1\/jspdf\.umd\.min\.js/.test(cap) && (cap.match(/integrity: 'sha384-[A-Za-z0-9+/=]{64}'/g) || []).length === 2);
-const order = ['workbook/rng.js', 'workbook/figures.js', 'workbook/items.js', 'workbook/capture.js', 'workbook/families/pythagoras.js', 'workbook/families/percent.js', 'exercise-set.js', 'workbook/book.js', 'workbook/controls.js'];
+const order = ['workbook/rng.js', 'workbook/figures.js', 'workbook/items.js', 'workbook/capture.js', 'workbook/families/pythagoras.js', 'workbook/families/percent.js', 'workbook/families/equations.js', 'exercise-set.js', 'workbook/book.js', 'workbook/controls.js'];
 const pos = order.map(s => index.indexOf('src="' + s));
 check('index loads the workbook core before exercise-set.js, the book after it', pos.every(p => p > 0) && pos.every((p, i) => !i || p > pos[i - 1]), pos.join(','));
 check('index links workbook.css after the older stylesheets', index.indexOf('workbook/workbook.css') > index.indexOf('mobile-polish.css'));

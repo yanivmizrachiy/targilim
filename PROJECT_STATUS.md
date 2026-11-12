@@ -27,6 +27,10 @@ On a branch based on PR #57. A7-03 mistake prompts show a genuinely incorrect st
 
 U7-01 raw-data multiple-choice prompts ask for the frequency of a specified value and offer four distinct counts. Mistake prompts give a false claim even when a value and its frequency coincide. The uncertainty verifier independently recounts the displayed raw data and checks all 19 rows in the existing pilot tables. Migration to verified workbook families is pending.
 
+## In review — first verified Grade 7 equation families (M2)
+
+A7-03 one-step, two-step and parenthesized equations now generate seeded exercises in the workbook, with substitution checks and separate answer keys. The remaining A7-03 families continue to use the existing engine. The workbook verifier tests all three families across every level and question type and checks that the document path still produces both verified and legacy exercises. U7-01 and the remaining M2 migrations are pending.
+
 ## Executive snapshot
 
 - Shipped coverage as of this snapshot: Hebrew RTL exercise generation for Grades 7–8. See [`RULES.md`](RULES.md) for product requirements.

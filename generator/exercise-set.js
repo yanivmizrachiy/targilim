@@ -122,9 +122,10 @@ function makeExercise(id,diff,qtype,isEngine,E,mcqMode){
 function produceExercise(topicId,level,qtype,o,rng,E){
   const W=window.TargilimWorkbook;
   const family=W&&W.families&&W.families[topicId];
-  if(family){
+  const selected=family?.selectFamily?.(rng.fork("family"),level,qtype);
+  if(family&&(!family.selectFamily||selected)){
     for(let attempt=0;attempt<4;attempt++){
-      const item=family.generate(rng,level,qtype,{mcqMode:o.mcqMode});
+      const item=family.generate(rng,level,qtype,{mcqMode:o.mcqMode,family:selected});
       if(!family.verify(item,{mcqMode:o.mcqMode}).length){
         return {qtype:item.qtype,level:level,verified:true,familyId:item.familyId,
           questionHTML:W.items.questionHTML(item),answerHTML:W.items.answerHTML(item),
