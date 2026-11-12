@@ -1,6 +1,6 @@
 # Workbook implementation plan — curriculum-aligned generator, digital book, A4 print and PDF
 
-**Date:** 2026-11-12 · **Branch:** `feat/workbook-vertical-slice` (stacked on PR #56, which holds the requirements in `RULES.md`) · **Status:** milestone M1 implemented on the branch, not merged; the live site is unchanged.
+**Date:** 2026-11-12 · **PR:** #57 · **Branch:** `feat/workbook-vertical-slice` (stacked on PR #56, which holds the requirements in `RULES.md`) · **Status:** milestone M1 implemented on the branch, not merged; the live site is unchanged.
 
 Requirements: `RULES.md` (product requirements, §5, §8). Evidence used here:
 [`docs/audits/MODULE_AUDIT_20261112.md`](../audits/MODULE_AUDIT_20261112.md) (every module, file:line),

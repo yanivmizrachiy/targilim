@@ -4,10 +4,10 @@
 **Central rules:** see `RULES.md` (authoritative operating guide; this file is the status snapshot).  
 **Default branch:** `main`.
 **Live site:** GitHub Pages serves `generator/` from `main` — https://yanivmizrachiy.github.io/targilim/ . The live site reflects `main` only.  
-**Current repo state:** Phase 1 + PRs #21–#34 + PRs #46–#52 + main commit `7db6ab4` + the Pythagoras terminology guard + task-generation-only main UI guard + source-06 uncertainty deep coverage + topic-dropdown cleanliness guard are merged into `main`. Local/GitHub sync is checked by `npm run verify:sync`. **In review, not merged:** PR #56 (product requirements in `RULES.md`) and the workbook vertical slice on `feat/workbook-vertical-slice` (stacked on #56, see below).
+**Current repo state:** Phase 1 + PRs #21–#34 + PRs #46–#52 + main commit `7db6ab4` + the Pythagoras terminology guard + task-generation-only main UI guard + source-06 uncertainty deep coverage + topic-dropdown cleanliness guard are merged into `main`. Local/GitHub sync is checked by `npm run verify:sync`. **In review, not merged:** PR #56 (product requirements in `RULES.md`) and PR #57, the workbook vertical slice on `feat/workbook-vertical-slice` (stacked on #56, see below).
 **Package version:** `0.78.0`
 
-## In review — workbook vertical slice (branch `feat/workbook-vertical-slice`, not merged)
+## In review — workbook vertical slice (PR #57, branch `feat/workbook-vertical-slice`, not merged)
 
 Plan, decisions and milestones: [`docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md`](docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md). Nothing below is live until merged with Yaniv's approval and a green GitHub Actions `verify:deep`.
 
