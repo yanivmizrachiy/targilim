@@ -2,7 +2,7 @@
 # תרגילים — דף כללים מרכזי לבינה מלאכותית ולמפתחים
 
 Repository: `yanivmizrachiy/targilim` · Hebrew name: `תרגילים`
-**Last updated: 2026-06-18** · Baseline: 2026-06-14
+**Last updated: 2026-11-12** · Baseline: 2026-06-14
 
 > **This file is the central operating guide.** Any AI or developer must read it
 > (and `PROJECT_STATUS.md`) before any change. It overrides older claims found in
@@ -11,7 +11,30 @@ Repository: `yanivmizrachiy/targilim` · Hebrew name: `תרגילים`
 
 ---
 
-## 1. What the project is
+## Product requirements — curriculum-aligned generator and digital workbooks
+
+This section is the sole canonical product specification for this expansion. The target scope is Israeli middle-school mathematics, Grades 7–9 only. The shipped baseline described elsewhere still covers Grades 7–8. Grade 9 is authorized for staged implementation after source review and engine planning. The digital book, A4 print and PDF download described here are authorized; the historical removal note does not apply to this workflow.
+
+### Curriculum and provenance
+
+- Use the [Jerusalem district curriculum collection](https://jerusalem2.vercel.app/chativat-beynayim/tochnit-limudim/) as the entry point. Verify the official documents and applicability behind its links. Map the current curriculum by grade, domain, objective, prerequisite, teaching sequence, assessment boundaries, notation, mathematical terminology, definitions and theorems, including their hypotheses and conclusions. Record document, edition, page or section and approval status. Distinguish the Grade 7–8 update, the Grade 9 curriculum and regular/reduced teaching plans. Do not apply superseded content to a current plan by default.
+- Extend the existing Source Bible and approved intake process. Preserve provenance on existing families. For new families, record both curriculum alignment and the approved source basis before enabling generation. Official documents from the supplied collection are candidates for documented intake; inventory changes must follow the existing planning and approval rules. Mark unresolved or unsupported mappings clearly.
+- Generate varied and original questions through source-grounded mathematical structures, contexts and representations. Preserve curricular terminology, notation and boundaries at every level. Use independently verifiable answers, valid distractors, accurate diagrams and explicit constraints for each family. Use mathematics-aware tests for equivalence, degeneracy, uniqueness where required, and consistency between question, diagram and solution.
+
+### Teacher workflow and output
+
+- Keep direct access to the generator. Let teachers select grade, applicable curriculum plan, topic(s), question count and document type (worksheet, quiz or exam). Make progression (uniform or graduated) independent of the curricular level (easier, curriculum-level or harder). Uniform sets use the selected level; graduated sets use an intentional order appropriate to the selected target, with genuine changes in cognitive demand. Explain unsupported combinations and keep controls bound to verified capabilities.
+- Generate complete, numbered student documents and an optional separate answer key. Use the same generated document model for the digital book, print and downloadable PDF, keeping text, formulas, diagrams and pagination consistent. Preserve existing per-question PNG export. Offer real whole-document print and PDF download with legible RTL/BiDi, reliable A4 breaks, readable monochrome output, and sufficient writing space. Keep answers out of student output.
+- Study the district site's [Pythagoras presentation](https://jerusalem2.vercel.app/chativat-beynayim/h/topics/h-pythagoras/) and its PythagorasNative implementation in jerusalem2. Derive the reader and print design from the verified reference: white A4 pages, distinct dark-blue page separators on screen, readable Hebrew mathematics, one consistent action bar, and chapter navigation when the generated structure warrants it. Optimize the generator and reader for desktop and mobile, accessible interaction, crisp vector diagrams, and professional page composition.
+
+### Engineering and verification
+
+- Audit the existing engines, registries, renderers, export paths, sources and CI before editing. Research strong, maintained techniques for constrained generation, deterministic replay, symbolic or independent validation, property-based testing, vector rendering and A4/PDF pagination. Compare viable options using measured correctness, coverage, output fidelity, performance and maintenance cost. Prefer clear, compact, maintainable code, shared data contracts and removal of proven dead or duplicate code. Preserve existing public behavior and protected material throughout incremental migration.
+- Establish a baseline with existing verification commands. Ship a representative vertical slice through the real generator, digital book and print/PDF before expanding the verified matrix. Test source coverage, all supported teacher options, seeded generations, solutions, RTL, visual output, desktop/mobile, answer isolation, and PDF parity. Keep the existing quality gates and deployment protections. Record actual test results and pending scope in PROJECT_STATUS.md. Production release follows the existing merge and approval process.
+
+---
+
+## 1. Shipped baseline
 
 - A **Hebrew, RTL** smart math **exercise generator** for **Grades 7–8 only** (no Grade 9).
 - Fully source-bound: every question maps to one of the **10 approved source PDFs**.
@@ -33,7 +56,7 @@ Repository: `yanivmizrachiy/targilim` · Hebrew name: `תרגילים`
 
 | Concern | Source of truth |
 |---|---|
-| Operating rules / forbidden actions / merge order | **`RULES.md`** (this file) |
+| Product requirements / operating rules / merge order | **`RULES.md`** (this file) |
 | Current project status snapshot | **`PROJECT_STATUS.md`** |
 | Pedagogy / per-topic intent | **`docs/SOURCE_BIBLE.md`** |
 | Approved source materials | **`sources/intake/2026-06-09/`** (10 PDFs) |
@@ -236,4 +259,4 @@ Earlier docs reference **"25 engines"**. That is historical: the current invento
 **50 engines** (25 dedicated `*-ENGINE` source-fit engines + 25 pilot engines), 0 fallback.
 The authoritative live list is `generator/engine/source-registry.js`. Removed scope
 (Grade 9, separate booklet/PDF-workbook/A4-bulk/answer-key-booklet modes) is **not** backlog
-and must not be reopened unless Yaniv explicitly says so.
+except for the expansion explicitly authorized in the product requirements above.
