@@ -49,6 +49,8 @@
 - [planning/PRODUCT_REQUIREMENTS.md](planning/PRODUCT_REQUIREMENTS.md)
 - [planning/TRUE_GENERATOR_TEACHER_CONTROLS_REQUIREMENTS.md](planning/TRUE_GENERATOR_TEACHER_CONTROLS_REQUIREMENTS.md)
 - [planning/PROJECT_PROGRESS_20260612.md](planning/PROJECT_PROGRESS_20260612.md)
+- [planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md](planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md) — תוכנית המימוש: בסיס, החלטות ארכיטקטורה, החלטה לכל מודול, אבני דרך, קבלה וחזרה.
+- [planning/CURRICULUM_MATRIX_20261112.md](planning/CURRICULUM_MATRIX_20261112.md) — מטריצת תוכנית לימודים ז׳–ט׳ מול המנועים, עם מסמך, מהדורה, עמוד וסטטוס.
 
 ## דוחות אימות (docs/reports/)
 
@@ -71,6 +73,7 @@ COPY_TO_CANVA_WORD, VISUAL_QA_ZERO_CARDS_FIX ועוד. שני קבצי snapshot 
 - [audits/REAL_GENERATOR_RUNTIME_AUDIT.md](audits/REAL_GENERATOR_RUNTIME_AUDIT.md)
 - [audits/OPEN_PRS_DEEP_AUDIT_20260613.md](audits/OPEN_PRS_DEEP_AUDIT_20260613.md)
 - [audits/REPO_ORGANIZATION_AUDIT_2026-06-09.md](audits/REPO_ORGANIZATION_AUDIT_2026-06-09.md)
+- [audits/MODULE_AUDIT_20261112.md](audits/MODULE_AUDIT_20261112.md) — אודיט כל מודול (קורא, קלט/פלט, בדיקות, החלטה) עם הפניות file:line.
 
 ## תהליך ואוטומציה (docs/process/)
 
@@ -86,3 +89,6 @@ COPY_TO_CANVA_WORD, VISUAL_QA_ZERO_CARDS_FIX ועוד. שני קבצי snapshot 
 - [reference/MOBILE_UI.md](reference/MOBILE_UI.md)
 - [reference/PRIVACY.md](reference/PRIVACY.md)
 - [reference/PDF_UPLOAD_STATUS.md](reference/PDF_UPLOAD_STATUS.md)
+- [reference/PYTHAGORAS_READER_DESIGN_20261112.md](reference/PYTHAGORAS_READER_DESIGN_20261112.md) — מפרט עיצוב מקורא פיתגורס המחוזי (דף A4, טיפוגרפיה, הדפסה, PDF).
+- [reference/TECHNIQUES_RESEARCH_20261112.md](reference/TECHNIQUES_RESEARCH_20261112.md) — השוואת טכניקות: שחזור מזורע, אימות, PDF, נוסחאות, שרטוטים.
+- [evidence/2026-11-12-workbook-slice/README.md](evidence/2026-11-12-workbook-slice/README.md) — ראיות לפני/אחרי (מסך, טלפון, הדפסה, PDF).

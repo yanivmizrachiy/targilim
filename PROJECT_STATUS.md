@@ -1,16 +1,28 @@
 # Project Status — Targilim תרגילים
 
-**Last updated:** 2026-06-19 · baseline 2026-06-14
+**Last updated:** 2026-11-12 · baseline 2026-06-14
 **Central rules:** see `RULES.md` (authoritative operating guide; this file is the status snapshot).  
 **Default branch:** `main`.
 **Live site:** GitHub Pages serves `generator/` from `main` — https://yanivmizrachiy.github.io/targilim/ . The live site reflects `main` only.  
-**Current repo state:** Phase 1 + PRs #21–#34 + PRs #46–#52 + main commit `7db6ab4` + the Pythagoras terminology guard + task-generation-only main UI guard + source-06 uncertainty deep coverage + topic-dropdown cleanliness guard are merged into `main`. Local/GitHub sync is checked by `npm run verify:sync`.
+**Current repo state:** Phase 1 + PRs #21–#34 + PRs #46–#52 + main commit `7db6ab4` + the Pythagoras terminology guard + task-generation-only main UI guard + source-06 uncertainty deep coverage + topic-dropdown cleanliness guard are merged into `main`. Local/GitHub sync is checked by `npm run verify:sync`. **In review, not merged:** PR #56 (product requirements in `RULES.md`) and the workbook vertical slice on `feat/workbook-vertical-slice` (stacked on #56, see below).
 **Package version:** `0.78.0`
+
+## In review — workbook vertical slice (branch `feat/workbook-vertical-slice`, not merged)
+
+Plan, decisions and milestones: [`docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md`](docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_20261112.md). Nothing below is live until merged with Yaniv's approval and a green GitHub Actions `verify:deep`.
+
+- **Teacher options:** grade, one or more topics (one chapter each), number of exercises, document type (דף תרגילים / בוחן / מבחן with whole points summing to 100), רמה 1/2/3 mapped to below / at / above the curriculum level, uniform or graduated order (independent of the level; graduated at רמה 1 is explained and stays uniform), question types, MCQ mode, colour / black-and-white, and a 6-character document code that rebuilds the same document (also kept in the page link).
+- **Document model:** one seeded document per request (count 1 included) → A4 sheets on screen, print and PDF from the same sheets; separate answer-key sheets shown only on request; answer markers never on the student side (also for the 50 existing engines and the 11 runtime topics).
+- **Verified families:** G7-03 (find_side, check_right_triangle, rectangle_diagonal) and N8-04 (percent_of_amount, percent_find_whole, percent_find_percent) — constructive numbers, new millimetre-based drawings (givens with full units, the unknown as "?", labels inside the drawing), and an independent checker for every item.
+- **Book / print / PDF:** sheet design follows the district Pythagoras reader; one action bar (answers, print, PDF download) and chapter navigation; PDF download = each sheet captured at ≈240 dpi (snapDOM 3.7.4) into jsPDF 4.2.1, both pinned with SRI; per-exercise copy/download as image kept.
+- **Fixed on the way:** the question-type controls were hidden for 25 of the 50 engine topics (`E.updatePanel`); the correct MCQ choice was written into the student HTML.
+- **Measured results (2026-11-12):** `npm run verify:deep` exit 0 locally; new gate `verify:workbook` (in `verify:all`) — 3,600 seeded items per verified topic with 0 checker failures, 61/61 dropdown topics compose clean documents, 61/61 rebuild identically from the document code in a fresh page. Browser harness (Playwright/Chromium, 8 cases incl. a 3-chapter exam, a black-and-white quiz and a runtime legacy topic): print pages = screen sheets = downloaded PDF pages in 8/8, with and without the key; A4 595×842 pt; no clipped sheet or label at 1280 px or 390 px; no answer marker on student sheets; no page errors. Evidence: [`docs/evidence/2026-11-12-workbook-slice/`](docs/evidence/2026-11-12-workbook-slice/README.md).
+- **Still open:** 48 engines not yet in the verified-family contract (M2); intake of the Sep–Oct 2026 re-issued curriculum documents, terminology "שכיחות", grade-placement fixes and the curriculum-plan selector (M3, needs approval); Grade 9 (M4, needs approval); cleanup and a CI browser job (M5); Safari/Firefox and real-printer checks not done. See the plan §4–§5.
 
 ## Executive snapshot
 
 - Shipped coverage as of this snapshot: Hebrew RTL exercise generation for Grades 7–8. See [`RULES.md`](RULES.md) for product requirements.
-- Active `*-ENGINE` topics: **50**.
+- Active `*-ENGINE` topics: **50**. The live topic selector shows **61** topics: the 50 engine topics plus 11 older topics that `phase2-loader.js` adds at runtime (open questions only). `verify:topic-dropdown` counts the 50 because its stub does not run the loader (measured 2026-11-12).
 - Fallback topics: **0 fallback**.
 - The generator is source-bound to the approved intake PDFs.
 - Source file 10 is sequencing/teaching context only; it is not a direct question source.
@@ -89,7 +101,8 @@ npm run verify:deep
 - Hebrew/math BiDi and wording quality check (`verify:math-bidi`);
 - copy/export checks, including copy-as-image entry points;
 - print-layout checks;
-- release documentation freshness check.
+- release documentation freshness check;
+- on the workbook branch: the document path gate `verify:workbook` (verified families, all topics, replay, options, A4/print/PDF contracts).
 
 ## Current product capabilities
 
