@@ -19,6 +19,43 @@ if (typeof E.generateUncertaintySourceDeepExercise !== 'function') {
   fail('generateUncertaintySourceDeepExercise is missing');
 }
 
+// Force the existing pilot rather than the source-deep wrapper. Recount
+// from the displayed data, independently of the engine's answer key.
+const pickBefore = E.pick;
+const randomBefore = Math.random;
+const failuresBeforePilot = fails;
+try {
+  for (const [tableIndex, rows] of [5, 5, 5, 4].entries()) {
+    for (let row = 0; row < rows; row++) {
+      let family = 'raw_to_table';
+      let draws = 0;
+      Math.random = () => draws++ === 0 ? 0.99 : (row + 0.5) / rows;
+      E.pick = list => typeof list[0] === 'string' ? family : list[tableIndex];
+      const mcq = E.generateU701Engine('standard', 'mcq').questionHTML;
+      const data = mcq.match(/נתונים: \$([\d, ]+)\$.*הערך \$(\d+)\$/);
+      const options = [...mcq.matchAll(/mcq-choice (mcq-correct)?"><span[^>]+>[^<]+<\/span> \$(\d+)\$/g)];
+      const expected = data && data[1].split(',').filter(value => Number(value) === Number(data[2])).length;
+      if (!expected || options.length !== 4 || new Set(options.map(option => option[2])).size !== 4 ||
+          options.filter(option => option[1]).map(option => Number(option[2])).join() !== String(expected)) {
+        fail('U7-01 raw-data MCQ has a wrong or ambiguous key: table ' + tableIndex + ', row ' + row);
+      }
+
+      family = 'read_freq';
+      draws = 0;
+      const mistake = E.generateU701Engine('standard', 'mistake').questionHTML;
+      const table = [...mistake.matchAll(/<td>(\d+)<\/td><td>(\d+)<\/td>/g)];
+      const claim = mistake.match(/הערך \$(\d+)\$ היא \$(\d+)\$/);
+      if (!claim || table[row]?.[1] !== claim[1] || table[row][2] === claim[2]) {
+        fail('U7-01 mistake prompt does not give a false frequency: table ' + tableIndex + ', row ' + row);
+      }
+    }
+  }
+} finally {
+  E.pick = pickBefore;
+  Math.random = randomBefore;
+}
+if (fails === failuresBeforePilot) pass('U7-01: all 19 rows give one MCQ key and a false claim in mistake prompts');
+
 const expectedTopicCounts = {
   'U7-01-ENGINE': 3,
   'U7-02-ENGINE': 4,

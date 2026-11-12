@@ -23,6 +23,10 @@ Plan, decisions and milestones: [`docs/planning/WORKBOOK_IMPLEMENTATION_PLAN_202
 
 On a branch based on PR #57. A7-03 mistake prompts show a genuinely incorrect step for positive, negative and zero constant terms. Open equation-identification questions include their four candidate equations. Hebrew plurals and explanations were corrected. The math/BiDi verifier exercises the affected generator paths. A7-03 remains in the existing engine; its migration to verified workbook families is pending.
 
+## In review — Grade 7 frequency-table corrections
+
+U7-01 raw-data multiple-choice prompts ask for the frequency of a specified value and offer four distinct counts. Mistake prompts give a false claim even when a value and its frequency coincide. The uncertainty verifier independently recounts the displayed raw data and checks all 19 rows in the existing pilot tables. Migration to verified workbook families is pending.
+
 ## Executive snapshot
 
 - Shipped coverage as of this snapshot: Hebrew RTL exercise generation for Grades 7–8. See [`RULES.md`](RULES.md) for product requirements.
