@@ -129,7 +129,11 @@ $$D=(${c.missing.x},${c.missing.y})$$`;
       // distractors include the x/y-swapped point (the classic coordinate
       // misconception), guarded so it never collides with the correct answer.
       const swap = c.missing.x !== c.missing.y ? {x:c.missing.y,y:c.missing.x} : {x:c.points[0].x,y:c.points[0].y};
-      choices = choiceList([{text:pointText(c.missing),correct:true},{text:pointText(swap),correct:false},{text:pointText({x:c.points[2].x,y:c.points[0].y}),correct:false},{text:pointText({x:c.points[1].x,y:c.points[2].y}),correct:false}]);
+      // misconception points first, then near points; never two equal options
+      const wrongPts = [swap, {x:c.points[2].x,y:c.points[0].y}, {x:c.points[1].x,y:c.points[2].y},
+        {x:c.missing.x+1,y:c.missing.y}, {x:c.missing.x,y:c.missing.y+1}, {x:c.missing.x+1,y:c.missing.y+1}]
+        .filter((p,i,all)=>!(p.x===c.missing.x&&p.y===c.missing.y) && all.findIndex(o=>o.x===p.x&&o.y===p.y)===i).slice(0,3);
+      choices = choiceList([{text:pointText(c.missing),correct:true}].concat(wrongPts.map(p=>({text:pointText(p),correct:false}))));
       if(qtype==='tf'){ isTrue=tfTrue; q = tfTrue ? `הנקודה ${pointText(c.missing)} משלימה את המלבן.` : `הנקודה ${pointText({x:c.points[2].x,y:c.points[0].y})} משלימה את המלבן.`; a = tfTrue ? `נכון. הנקודה החסרה לוקחת x מ-A ו-y מ-C: ${pointText(c.missing)}.` : `שגוי. זו כבר נקודה B. הנקודה החסרה צריכה לקחת x מ-A ו-y מ-C: ${pointText(c.missing)}.`; }
       if(qtype==='mistake'){ q = `תלמיד השלים את הנקודה הרביעית כ-${pointText({x:c.points[1].x,y:c.points[2].y})}, כי "לוקחים את x ו-y מהנקודה האחרונה".`; a = `הטעות: צריך לשמור צלעות מקבילות לצירים. הנקודה החסרה היא ${pointText(c.missing)}.`; }
     }

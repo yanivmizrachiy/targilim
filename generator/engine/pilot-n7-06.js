@@ -25,8 +25,11 @@
   }
 
   function choices(family,x){
-    const correct = x.p;
-    const wrongs = [x.np === correct ? -correct : x.np, Math.abs(correct), x.a * x.n];
+    // compare_both as MCQ asks for one value only: −a^n (see question())
+    const correct = family==='compare_both' ? x.np : x.p;
+    const wrongs = family==='compare_both'
+      ? [-x.np, x.a * x.n, -(x.a * x.n)]
+      : [x.np === correct ? -correct : x.np, Math.abs(correct), x.a * x.n];
     const values=[correct].concat(wrongs).filter((v,i,a)=>a.indexOf(v)===i).slice(0,4);
     while(values.length<4){ let f=correct + (values.length*5*(correct<0?-1:1)); while(values.indexOf(f)>=0) f++; values.push(f); }
     return E.shuffle(values).map((v,i)=>({label:['א','ב','ג','ד'][i], text:'$'+v+'$', correct:v===correct}));
@@ -36,6 +39,8 @@
     if(family==='compare_both'){
       if(qtype==='tf') return `$(-${x.a})^{${x.n}} = -${x.a}^{${x.n}}$.`;
       if(qtype==='mistake') return `תלמיד כתב: "$(-${x.a})^{${x.n}}$ ו-$-${x.a}^{${x.n}}$ זה אותו דבר, הסוגריים לא משנים".`;
+      // one well-defined answer for multiple choice (no א/ב sub-items next to choice letters)
+      if(qtype==='mcq') return `שימו לב לסוגריים. מהו ערך הביטוי $-${x.a}^{${x.n}}$?`;
       return `חשבו את שני הביטויים והסבירו את ההבדל:\nא. $(-${x.a})^{${x.n}}$\nב. $-${x.a}^{${x.n}}$`;
     }
     if(qtype==='tf') return `$(-${x.a})^{${x.n}} = ${tfTrue?x.p:(x.np === x.p ? -x.p : x.np)}$.`;
