@@ -15,15 +15,25 @@
 // Capture a card element to a PNG Blob. options: { bw:boolean }
 async function captureExerciseCardAsPng(cardElement, options) {
   options = options || {};
-  if (!cardElement || typeof html2canvas !== 'function') throw new Error('capture-unavailable');
+  const W = window.TargilimWorkbook;
+  if (!cardElement || (typeof html2canvas !== 'function' && !(W && W.capture))) throw new Error('capture-unavailable');
   const bw = (typeof options.bw === 'boolean')
     ? options.bw
     : (typeof visualMode === 'function' && visualMode() === 'bw');
+  // Book sheets may be zoomed to fit a phone; capture them at 100% (wb-capture).
+  document.body.classList.add('wb-capture');
+  try {
   // Wait for web fonts + two animation frames so Hebrew + KaTeX are fully laid
   // out before the snapshot (otherwise glyphs can clip or shift in the image).
   if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
   await new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); });
-  const canvas = await html2canvas(cardElement, {
+  // Primary path: snapDOM lets the browser itself lay out the text and SVG
+  // (closest to the on-screen sheet); html2canvas stays as the fallback.
+  // The whole card, without the controls.
+  var canvas = W && W.capture
+    ? await W.capture.toCanvas(cardElement, { scale: Math.max(3, (window.devicePixelRatio || 1) * 2), exclude: ['[data-html2canvas-ignore]'], excludeMode: 'remove' })
+    : null;
+  if (!canvas) canvas = await html2canvas(cardElement, {
     backgroundColor: '#ffffff',
     // Maximum-quality capture: render at 2· the device pixel ratio with a hard
     // floor of 3 (→ 3 on standard screens, 4 on Retina) so the PNG is razor-sharp
@@ -40,6 +50,7 @@ async function captureExerciseCardAsPng(cardElement, options) {
       el.style.overflow = 'visible';
     }
   });
+  } finally { document.body.classList.remove('wb-capture'); }
   // Black-and-white export: desaturate the rendered pixels (luma) so the result
   // is reliably grayscale regardless of html2canvas filter support.
   if (bw) {
