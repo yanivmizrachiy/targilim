@@ -2,30 +2,39 @@
 # תרגילים — דף כללים מרכזי לבינה מלאכותית ולמפתחים
 
 Repository: `yanivmizrachiy/targilim` · Hebrew name: `תרגילים`
-**Last updated: 2026-06-18** · Baseline: 2026-06-14
+**Last updated: 2026-11-12** · Baseline: 2026-06-14
 
-> **This file is the central operating guide.** Any AI or developer must read it
-> (and `PROJECT_STATUS.md`) before any change. It overrides older claims found in
-> historical docs. When this file and code disagree, **the code + verifiers win** —
-> fix this file.
+> **This file is the single source of truth for product requirements and operating rules.** Read it and `PROJECT_STATUS.md` before changing the project. Use code, verifiers and release evidence to establish actual behavior. Record discrepancies as implementation gaps or correct stale status claims.
 
 ---
 
-## 1. What the project is
+## Product requirements — curriculum-aligned generator and digital workbooks
 
-- A **Hebrew, RTL** smart math **exercise generator** for **Grades 7–8 only** (no Grade 9).
-- Fully source-bound: every question maps to one of the **10 approved source PDFs**.
-- It is a **print-first teaching product**, not an online auto-graded task.
-- Main-page capabilities: single-exercise + numbered worksheet generation,
-  mixed question types, answer key, print flow, and **image export**
-  (copy/download a whole question as PNG).
-- Historical/internal gallery, visual-QA, and teacher-support files may remain
-  in the repo for audits, but they are **not linked from `generator/index.html`**
-  and are not part of the primary product flow.
-- **Live site:** GitHub Pages serves `generator/` from `main`:
-  https://yanivmizrachiy.github.io/targilim/
-  - **The live site reflects `main` only.** Changes on open branches do **not**
-    appear on the site until they are merged into `main` and Pages redeploys.
+The product serves Israeli middle-school mathematics in Grades 7–9 only. Implement Grade 9 in stages after source review and engine planning. The current production coverage is tracked in `PROJECT_STATUS.md`.
+
+### Curriculum and provenance
+
+- Use the [Jerusalem district curriculum collection](https://jerusalem2.vercel.app/chativat-beynayim/tochnit-limudim/) as the entry point. Verify the official documents and applicability behind its links. Map the current curriculum by grade, domain, objective, prerequisite, teaching sequence, assessment boundaries, notation, mathematical terminology, definitions and theorems, including their hypotheses and conclusions. Record document, edition, page or section and approval status. Distinguish the Grade 7–8 update, the Grade 9 curriculum and regular/reduced teaching plans. Do not apply superseded content to a current plan by default.
+- Extend the approved intake process and the pedagogy registry. Regenerate `docs/SOURCE_BIBLE.md` from the registry with its existing generator. Preserve provenance on existing families. For new families, record both curriculum alignment and the approved source basis before enabling generation. Official documents from the supplied collection are candidates for documented intake; inventory changes must follow the existing planning and approval rules. Mark unresolved or unsupported mappings clearly.
+- Generate varied and original questions through source-grounded mathematical structures, contexts and representations. Preserve curricular terminology, notation and boundaries at every level. Use independently verifiable answers, valid distractors, accurate diagrams and explicit constraints for each family. Use mathematics-aware tests for equivalence, degeneracy, uniqueness where required, and consistency between question, diagram and solution.
+
+### Teacher workflow and output
+
+- Let teachers select grade, applicable curriculum plan, topic(s), question count and document type (worksheet, quiz or exam). Make progression (uniform or graduated) independent of the curricular level (easier, curriculum-level or harder). Uniform sets use the selected level; graduated sets use an intentional order appropriate to the selected target, with genuine changes in cognitive demand. Explain unsupported combinations and keep controls bound to verified capabilities.
+- Generate complete, numbered student documents and an optional separate answer key. Use the same generated document model for the digital book, print and downloadable PDF, keeping text, formulas, diagrams and pagination consistent. Offer real whole-document print and PDF download with reliable A4 page breaks. Apply the permanent design and student-output rules below.
+
+### Engineering and verification
+
+- Use the highest reasoning effort available for substantive work across curriculum analysis, mathematical engine design, visual design, architecture, performance, accessibility and verification. Compare serious alternatives against representative outputs. Revisit failed assumptions and iterate until the documented acceptance criteria pass. Record the evidence behind consequential decisions.
+
+- Before product-code changes, audit the existing engines, registries, renderers, export paths, sources and CI. Prepare an evidence-backed implementation plan with a curriculum and capability matrix, architecture decisions and tradeoffs, dependency order, migration and rollback strategy, measurable acceptance criteria, and verification for each milestone. Start implementation once this plan is grounded in the repository baseline. Research strong, maintained techniques for constrained generation, deterministic replay, symbolic or independent validation, property-based testing, vector rendering and A4/PDF pagination. Compare viable options using measured correctness, coverage, output fidelity, performance and maintenance cost. Prefer clear, compact, maintainable code, shared data contracts and removal of proven dead or duplicate code. Preserve existing public behavior and protected material throughout incremental migration.
+- Establish a baseline with existing verification commands. Ship a representative vertical slice through the real generator, digital book and print/PDF before expanding the verified matrix. Test source coverage, all supported teacher options, seeded generations, solutions, RTL, visual output, desktop/mobile, answer isolation, and PDF parity. Keep the existing quality gates and deployment protections. Record actual test results and pending scope in PROJECT_STATUS.md. Production release follows the existing merge and approval process.
+
+---
+
+## 1. Production entry point
+
+GitHub Pages publishes `generator/` from `main` at https://yanivmizrachiy.github.io/targilim/. See `PROJECT_STATUS.md` for shipped features and inventory.
 
 ---
 
@@ -33,10 +42,10 @@ Repository: `yanivmizrachiy/targilim` · Hebrew name: `תרגילים`
 
 | Concern | Source of truth |
 |---|---|
-| Operating rules / forbidden actions / merge order | **`RULES.md`** (this file) |
+| Product requirements / operating rules / merge order | **`RULES.md`** (this file) |
 | Current project status snapshot | **`PROJECT_STATUS.md`** |
 | Pedagogy / per-topic intent | **`docs/SOURCE_BIBLE.md`** |
-| Approved source materials | **`sources/intake/2026-06-09/`** (10 PDFs) |
+| Approved source materials | **`sources/intake/`** (dated, approved source collections) |
 | Live engine inventory (the real list) | **`generator/engine/source-registry.js`** |
 | Quality gates | **`package.json`** scripts (`verify:deep`) |
 | Local worktree + GitHub sync | `docs/reference/ACTIVE_WORKTREE_AND_SYNC.md` · `npm run verify:sync` |
@@ -74,7 +83,7 @@ RULES.md                this central operating guide
 - **Do not change** `generator/engine/source-registry.js` without a proven reason.
 - **No new engine without full planning** (registry + pedagogy + docs + verifiers + count update). Check first whether it already exists.
 - **No `A8-04-ENGINE`** — A8-04 (inequalities) is a **legacy/source-fit topic in `a8-03.js`**, intentionally not a dedicated engine. (A8-05 = percent equations, also legacy.)
-- **No "engine 51".** The inventory is **50 engines / 0 fallback** — keep it unless a planned, approved change updates the count everywhere.
+- Keep the verified engine inventory and topic-selector coverage in sync. Changes in engine count require a planned and approved registry update, with zero fallback topics.
 - **Do not weaken a verifier.** Adding guards is fine; loosening existing checks is not.
 - **Verifiers are read-only by default.** A normal `verify:*` run must not dirty
   the working tree; generated report refreshes require `--write` or an explicit
@@ -83,64 +92,18 @@ RULES.md                this central operating guide
 - **Do not invent questions** without a source. No new Grade-8 numeric/uncertainty content without **new** source intake.
 - **Do not claim something is done if it only exists on a branch** and is not merged.
 - **Every PR must pass `npm run verify:deep`.**
-- **Update docs** (`PROJECT_STATUS.md`, this file) after any meaningful change — truthfully.
+- Update `PROJECT_STATUS.md` when verified implementation status changes. Update this file when requirements or operating rules change.
 
 ---
 
-## 5. Changelog — merged improvements (most recent first)
+## 5. Repository-wide code redesign, compatibility and cleanup
 
-All entries below are **merged to `main`, live, and `verify:deep`-green**. Newest first.
+- Review all repository-owned code, including the application, every exercise engine, registries, data validation, graphics and layout, book/print/PDF and other exports, shared utilities, build tooling, tests, scripts and CI. Trace each module to its callers, inputs, outputs and verification. Use this inventory to plan the redesign across the entire codebase and track each area to completion.
+- For each module decide whether to redesign, refactor, consolidate, remove or retain it, and record the evidence for that decision in the implementation plan. Rewrite any existing component whose design prevents a meaningful improvement, including core components where needed. Judge the new code by correctness, readability, reduced duplication and complexity, performance, and ease of extending curriculum coverage. Apply these criteria to existing code as well as new work.
+- Migrate in dependency order with small, reviewable changes. Compare baseline and revised behavior using real inputs, deterministic samples where applicable, and measured results. Verify compatibility at public entry points and across the existing engine inventory. Capture intentional behavior changes against the product requirements and run the existing gates throughout the migration.
 
-| PR | Date | Improvement |
-|---|---|---|
-| main | 2026-06-18 | **Proportional worksheet answer boxes** — free-write answer spaces now scale to the task instead of using a fixed oversized box; guarded by `verify:worksheet-polish`. |
-| main | 2026-06-18 | **Repo foundation guard** — added `verify:topic-dropdown` so the visible topic dropdown stays at 50 teacher-facing topics with no duplicates and no internal jargon. |
-| main | 2026-06-18 | **Source-06 uncertainty deep coverage** — 33 PDF-mapped families across U7/U8 uncertainty with tables, bar/pie/line graphs and multi-source tasks. |
-| main | 2026-06-18 | **Task-generation-only main UI** — teacher/gallery/visual-QA links are absent from `generator/index.html` and guarded by `verify:task-ui`. |
-| main | 2026-06-17 | **Pythagoras Hebrew terminology guard** — student and teacher wording now uses the standard Hebrew terms **ניצב/ניצבים** and **יתר**; `verify:geometry-language` prevents "רגל/רגליים" from returning to G7-03 Pythagoras output. |
-| **#52** | 2026-06-17 | **A8-03 count-and-value system word problem** — coins/stamps style elimination family added and documented. |
-| main `7db6ab4` | 2026-06-17 | **Source-fit/UI sync** — A7-05 aligned to value tables + first-quadrant graphs; A7-03/U7-01/U8-01 families expanded; mobile share reduced to copy-image only; premium typography guards added. |
-| **#51** | 2026-06-17 | **A7-02 expression-value range** — questions of the form "if x is in [a,b], where is kx+c?" |
-| **#50** | 2026-06-17 | **Topic dropdown dedupe/order cleanup** — canonical engine topic display without stale duplicate rows. |
-| **#49** | 2026-06-17 | **Registry/source-bible sync** — shipped families documented in `pedagogy-registry` and regenerated `SOURCE_BIBLE`. |
-| **#48** | 2026-06-17 | **A7-01 polygon perimeter with algebraic sides** — labeled diagram + source-backed family. |
-| **#47** | 2026-06-17 | **Source-level family expansion** — applied-formula substitution and equal-expressions families. |
-| **#46** | 2026-06-17 | **Difficulty tiers integration** — new families wired into real רמה 1/2/3 paths. |
-| **#34** | 2026-06-16 | **Pythagoras (legacy G7-03) fixes** — diagram no longer reveals the answer (the unknown side is marked **`?`**, like `angleSvg` already did for the unknown angle); fixed the clipped "ס\"מ" label (`text-anchor="middle"`); precise Hebrew around unknown side length; **premium student answer box** (rounded, soft shadow, ruled writing lines). |
-| **#33** | 2026-06-16 | **Source-faithful topic labels** — `G7-02` "שטחי צורות שטוחות" → **"שטחי מצולעים"** (source: "שטחי מצולעים" / "Areas of polygons"); `G8-04` "ניידות משולשים" → **"דמיון משולשים"** (curriculum-map "Triangle similarity"; engine + questions already used "דמיון"). `U7-01` "טבלת תדירות" kept — the source uses "תדירות". |
-| **#32** | 2026-06-16 | **Removed the landing splash** — the main page opens **directly** to the "הגדרות תרגיל" topic-selection tool (no hero/benefits/CTA/marketing). `generator/landing.css` deleted. |
-| **#30** | 2026-06-16 | **Level selector = רמה 1 / רמה 2 / רמה 3**, and the visible `#sl` selector now actually drives difficulty for every topic (it was previously a hidden no-op reading `#selDiff`). |
-| #20 | 2026-06-15 | Central rules + status refresh. |
-| #28 | 2026-06-15 | Real **A7-04 multi-correct** — forward `mcqMode` through the wrapper chain; `verify:multi-correct` wired into `verify:deep` (multi → 2 correct, single → 1). |
-| #27 | 2026-06-15 | Worksheet polish — sharp math rectangles (`sharpenMathRects`); no question-type badge on the student card. |
-| #21–#24 | 2026-06-15 | UI premium round — professional card + Assistant typography; one clean untitled answer box; color/שחור-לבן only + per-card image export; `verify:premium-ui` guard. |
-
-Earlier history: PR #7/#8 (Phase 1, 50-engine generator), #15–#18 (A7-04 + stress + PDF audit, inventory = 20 = 10 working + 10 `originals/` backups). Detail in `docs/reports/`.
-
----
-
-## 6. Current state (verified 2026-06-18)
-
-- The live site reflects `main`; GitHub Pages publishes `generator/` from `main`.
-- Local sync is checked with `npm run verify:sync`; it must pass before continuing work in a local copy.
-- The main page **opens directly to the generator** — there is no landing/marketing page.
-- **50 engine topics (`*-ENGINE`) / 0 fallback** — counted from `source-registry.js`.
-- **No `A8-04-ENGINE`** (A8-04 inequalities is legacy in `a8-03.js`; A8-05 percent equations is legacy too).
-- `verify:deep` aggregates the deep gates and includes `verify:premium-ui` + `verify:worksheet-polish` + `verify:multi-correct`.
-- The visible topic dropdown is guarded by `verify:topic-dropdown`: 50
-  teacher-facing topics, no duplicate visible labels/values, and no
-  internal jargon such as `fallback`, `QA`, `Registry`, or `מנוע`.
-- Real A7-04 multi-correct works; **U7-03 single-answer MCQ already exists** in `source-fit-extensions.js` — do **not** duplicate it.
-
-### Guarded cleanup note
-- Legacy generator files may still exist where they are part of shipped
-  behavior or historical compatibility, but the main dropdown must show only a
-  clean teacher-facing topic list. Do not delete legacy files during cleanup
-  unless a verifier proves they are unreachable and unnecessary.
-
-### Do NOT
-- Add Grade-8 numeric or uncertainty engines without **new** source intake.
-- Start new content before checking existing engine coverage.
+- Keep existing behavior and entry points covered by the verification suite. Check registry and runtime usage before adding families or removing legacy code. Remove code only after proving it is unused or after migrating and verifying its callers.
+- Keep historical/internal gallery, teacher-support and visual-QA tools outside the primary generator flow. See `PROJECT_STATUS.md` for implementation history.
 
 ---
 
@@ -153,8 +116,7 @@ Earlier history: PR #7/#8 (Phase 1, 50-engine generator), #15–#18 (A7-04 + str
   no unproven claims, no `fallback`/`QA`/`מנוע`/`Registry` developer jargon in visible text.
 - The interface must look **premium**; fonts must read like a real math textbook.
 - View options are **`צבע` / `שחור־לבן` only** — never the words "גווני אפור".
-- The level selector is **`רמה 1` / `רמה 2` / `רמה 3`** (the visible `#sl`) and must
-  actually drive difficulty for every topic.
+- Keep three real difficulty tiers with a documented mapping to the curricular levels specified above. Each supported topic must honor its selected difficulty.
 - **Diagrams must never reveal the answer.** The unknown side/angle/value is marked **`?`**;
   only the givens carry values. Labels must sit fully inside the viewBox (`text-anchor="middle"`),
   never clipped, with full units (`ס"מ`, not `ס`).
@@ -167,7 +129,8 @@ Earlier history: PR #7/#8 (Phase 1, 50-engine generator), #15–#18 (A7-04 + str
   mark-the-answer types (mcq/tf) get **no** box. A stable `data-student-answer-box="true"`
   hook identifies it.
 - Diagrams must be **sharp, readable, not clipped**.
-- Mobile must look professional; print must be clean.
+- Use the [district Pythagoras reader](https://jerusalem2.vercel.app/chativat-beynayim/h/topics/h-pythagoras/) and `PythagorasNative` in `jerusalem2` as design references. Use white A4 pages, dark-blue separators visible only on screen, one action bar and chapter navigation where the document has chapters. Keep the generator and reader accessible and responsive, with crisp vector graphics and readable RTL/BiDi typography, formulas and monochrome printing.
+- Raise the visual quality beyond the current generator and its outputs. Treat the district Pythagoras reader as a reference for reading and pagination. Capture the baseline and compare successive designs using real exercises across numeric, algebraic, geometric and uncertainty topics. Review the generator UI, exercise cards, digital book, printed A4 and downloaded PDFs at desktop and mobile widths and in color and monochrome. Require demonstrable improvements in hierarchy, spacing, mathematical typography, vector diagrams, charts and tables, label legibility and page composition. Verify mathematical fidelity, answer isolation and absence of clipping or overlap in the actual exported files. Preserve before/after evidence and iterate on remaining weaknesses.
 - Teacher-only content must never appear in the student print/export.
 
 ---
@@ -228,12 +191,3 @@ Estimated improvement:
 - **Claude** — project manager / pedagogy / design / quality-gate owner.
 - **ChatGPT/Codex** — execution assistants that preserve repository reality.
 
----
-
-## Appendix — historical note
-
-Earlier docs reference **"25 engines"**. That is historical: the current inventory is
-**50 engines** (25 dedicated `*-ENGINE` source-fit engines + 25 pilot engines), 0 fallback.
-The authoritative live list is `generator/engine/source-registry.js`. Removed scope
-(Grade 9, separate booklet/PDF-workbook/A4-bulk/answer-key-booklet modes) is **not** backlog
-and must not be reopened unless Yaniv explicitly says so.

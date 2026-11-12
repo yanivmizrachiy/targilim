@@ -9,7 +9,7 @@
 
 ## Executive snapshot
 
-- Product scope: smart Hebrew RTL math exercise generator for Grades 7–8.
+- Shipped coverage as of this snapshot: Hebrew RTL exercise generation for Grades 7–8. See [`RULES.md`](RULES.md) for product requirements.
 - Active `*-ENGINE` topics: **50**.
 - Fallback topics: **0 fallback**.
 - The generator is source-bound to the approved intake PDFs.
