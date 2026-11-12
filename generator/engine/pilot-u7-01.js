@@ -39,16 +39,10 @@
     const t=s.t, idx=s.idx;
     if(family==='raw_to_table'){
       const c=t.counts[idx];
-      const opts=[], seen={};
-      function push(text, correct){ if(!seen[text]){ seen[text]=1; opts.push({text:text, correct:!!correct}); } }
-      push(`${t.label} $${t.vals[idx]}$ — תדירות $${c}$`, true);
-      [t.vals[idx], c+1, Math.max(1,c-1), t.total].forEach(function(w){
-        if(w!==c) push(`${t.label} $${t.vals[idx]}$ — תדירות $${w}$`, false);
-      });
-      push(`סך הכול $${t.vals.reduce((a,b)=>a+b,0)}$ נבדקים`, false);
-      push(`סך הכול $${t.total}$ נבדקים`, false);
-      const four = E.shuffle([opts[0]].concat(E.shuffle(opts.slice(1)).slice(0,3)));
-      return four.map((o,i)=>({label:['א','ב','ג','ד'][i], text:o.text, correct:o.correct}));
+      const counts = [c, c-1, c+1, c+2];
+      return E.shuffle(counts).map((count,i)=>({
+        label:['א','ב','ג','ד'][i], text:'$'+count+'$', correct:count===c
+      }));
     }
     if(family==='rel_freq'){
       const c=t.counts[idx], p=Math.round(c*100/t.total);
@@ -84,7 +78,7 @@
       const list = rawList(t).join(', ');
       if(qtype==='tf') return `ברשימת הנתונים $${list}$, התדירות של ${t.label} $${t.vals[idx]}$ היא $${tfTrue?t.counts[idx]:t.counts[idx]+1}$.`;
       if(qtype==='mistake') return `לפניכם נתונים: $${list}$. תלמיד טען: "בטבלת שכיחויות כותבים כל ערך פעם אחת, לכן התדירות של כל ערך היא 1".`;
-      if(qtype==='mcq') return `לפניכם נתונים: $${list}$. איזו שורה חייבת להופיע בטבלת השכיחויות?`;
+      if(qtype==='mcq') return `לפניכם נתונים: $${list}$. מה השכיחות של הערך $${t.vals[idx]}$ בטבלת השכיחויות?`;
       return `לפניכם נתונים:\n$${list}$\nא. ארגנו את הנתונים בטבלת שכיחויות.\nב. חשבו תדירות יחסית של ${t.label} $${t.vals[idx]}$.`;
     }
     if(family==='rel_freq'){
@@ -98,7 +92,11 @@
     }
     if(family==='read_freq'){
       if(qtype==='tf') return `לפי הטבלה, התדירות של ${t.label} $${t.vals[idx]}$ היא $${tfTrue?t.counts[idx]:t.counts[idx]+1}$.`;
-      if(qtype==='mistake') return `תלמיד קרא מהטבלה: "התדירות של $${t.vals[idx]}$ היא $${t.vals[idx]}$".`;
+      if(qtype==='mistake'){
+        const value = t.vals[idx], count = t.counts[idx];
+        const claim = value === count ? t.counts[(idx+1)%t.counts.length] : value;
+        return `תלמיד קרא מהטבלה: "השכיחות של הערך $${value}$ היא $${claim}$".`;
+      }
       return `לפניכם טבלת תדירות.\nמה התדירות של ${t.label} $${t.vals[idx]}$?`;
     }
     if(family==='most_frequent'){
@@ -124,6 +122,7 @@
     const wrong = qtype==='mistake' || (qtype==='tf' && !tfTrue);
     if(family==='raw_to_table'){
       const c=t.counts[idx], g=gcd(c,t.total), fn=c/g, fd=t.total/g;
+      if(qtype==='mcq') return `הערך $${t.vals[idx]}$ מופיע ברשימה $${c}$ פעמים, ולכן זו השכיחות שלו.`;
       const table = E.freqTableHtml([t.label,'תדירות'], t.vals.map((v,i)=>[v,t.counts[i]]));
       const rel = `\\frac{${c}}{${t.total}}` + (g>1 ? `=\\frac{${fn}}{${fd}}` : '') + `=${Math.round(c*100/t.total)}\\%`;
       const prefix = wrong ? 'שגוי — בטבלת שכיחויות לא מסתפקים בהופעה אחת של כל ערך; סופרים כמה פעמים כל ערך הופיע ברשימה.\n' : '';
@@ -137,7 +136,7 @@
       return `${prefix}$$${steps}$$`;
     }
     if(family==='read_freq'){
-      const prefix = wrong ? 'שגוי — התדירות היא המספר בעמודת התדירות, לא הערך עצמו.\n' : '';
+      const prefix = wrong ? 'שגוי — קוראים את השכיחות בעמודה המתאימה, באותה שורה שבה מופיע הערך.\n' : '';
       return `${prefix}בשורת ${t.label} $${t.vals[idx]}$ — התדירות היא $${t.counts[idx]}$.`;
     }
     if(family==='most_frequent'){
