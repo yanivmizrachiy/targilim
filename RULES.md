@@ -96,7 +96,11 @@ RULES.md                this central operating guide
 
 ---
 
-## 5. Compatibility and cleanup
+## 5. Repository-wide code redesign, compatibility and cleanup
+
+- Review all repository-owned code, including the application, every exercise engine, registries, data validation, graphics and layout, book/print/PDF and other exports, shared utilities, build tooling, tests, scripts and CI. Trace each module to its callers, inputs, outputs and verification. Use this inventory to plan the redesign across the entire codebase and track each area to completion.
+- For each module decide whether to redesign, refactor, consolidate, remove or retain it, and record the evidence for that decision in the implementation plan. Rewrite any existing component whose design prevents a meaningful improvement, including core components where needed. Judge the new code by correctness, readability, reduced duplication and complexity, performance, and ease of extending curriculum coverage. Apply these criteria to existing code as well as new work.
+- Migrate in dependency order with small, reviewable changes. Compare baseline and revised behavior using real inputs, deterministic samples where applicable, and measured results. Verify compatibility at public entry points and across the existing engine inventory. Capture intentional behavior changes against the product requirements and run the existing gates throughout the migration.
 
 - Keep existing behavior and entry points covered by the verification suite. Check registry and runtime usage before adding families or removing legacy code. Remove code only after proving it is unused or after migrating and verifying its callers.
 - Keep historical/internal gallery, teacher-support and visual-QA tools outside the primary generator flow. See `PROJECT_STATUS.md` for implementation history.
