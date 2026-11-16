@@ -38,3 +38,13 @@ test('does not execute model content or change stored source paths',()=>{
  assert.match(formatReport(r),/Unreviewed model output/);
  assert.equal(r.repository,'yanivmizrachiy/targilim');
 });
+
+test('empty successful provider call does not masquerade as a readable result',()=>{
+ const r=buildReport({...base,output:''});
+ assert.equal(r.status,'CALL_FINISHED_NO_READABLE_RESULT');
+});
+test('raw HTML in model output is escaped before GitHub Actions summary',()=>{
+ const r=buildReport({...base,output:'<script>alert(1)</script> & summary'});
+ assert.ok(!formatReport(r).includes('<script>'));
+ assert.ok(formatReport(r).includes('&lt;script&gt;'));
+});
