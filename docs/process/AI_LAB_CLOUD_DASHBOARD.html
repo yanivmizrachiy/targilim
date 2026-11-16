@@ -34,22 +34,23 @@ const b=document.getElementById('refresh'),st=document.getElementById('api-state
 const gatewayBtn=document.getElementById('check-gateway'),gatewayResult=document.getElementById('gateway-result');
 gatewayBtn.addEventListener('click',async function(){
   gatewayBtn.disabled=true;
-  gatewayResult.textContent='בודק הגדרות זהות בשרת, ללא קריאת מודל...';
+  gatewayResult.textContent='מבצע בדיקת הרשאה בקריאה ליתרת הקרדיטים בלבד. אין בקשת מודל.';
   try{
-    const res=await fetch('/api/ai-readiness',{cache:'no-store'});
+    const res=await fetch('/api/ai-readiness?verify=credits',{cache:'no-store'});
     if(!res.ok) throw Error('HTTP '+res.status);
     const data=await res.json();
     if(data.schema!=='targilim-ai-lab-readiness/v1') throw Error('תשובת שרת לא מוכרת');
-    const auth=data.gateway_auth;
-    const message=auth==='GATEWAY_KEY_PRESENT_NOT_VALIDATED'
-      ? 'מפתח AI Gateway מזוהה בשרת, אך לא אומת מול הספק.'
-      : auth==='OIDC_HEADER_PRESENT_NOT_VALIDATED'
-        ? 'כותרת OIDC נצפתה בבקשת השרת. תקפותה לא אומתה, וייתכן שהכותרת אינה מהימנה.'
-        : auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED'
-          ? 'אסימון OIDC נמצא בסביבה, אך לא אומת מול Gateway.'
-          : 'לא זוהתה דרך הזדהות ל־AI Gateway.';
-    gatewayResult.textContent=message+' תקציב API לא אומת; שום מודל לא הופעל.';
-  }catch(e){ gatewayResult.textContent='לא הצלחתי לאמת את חיבור ה־API: '+e.message; }
+    const state=data.gateway_probe_status;
+    const message=state==='AUTHENTICATED_CREDITS_ENDPOINT'
+      ? 'ההרשאה התקבלה בנקודת הקרדיטים של AI Gateway.'
+      : state==='AUTH_REJECTED_401' ? 'Gateway דחה את אמצעי ההזדהות (401).'
+      : state==='AUTH_FORBIDDEN_403' ? 'הגישה לקרדיטים חסומה בהרשאות (403).'
+      : state==='CREDITS_OR_QUOTA_402' ? 'Gateway מחזיר חסם קרדיטים או מכסה (402).'
+      : state==='MISSING_AUTH' ? 'לא נמצא אמצעי הזדהות בשרת.'
+      : state==='UPSTREAM_UNREACHABLE' ? 'שרת Gateway לא היה זמין לבדיקה.'
+      : 'האימות טרם הצליח: '+String(state||'UNKNOWN');
+    gatewayResult.textContent=message+' בדיקת תקציב: לא אומתה. קריאות מודלים: אפס.';
+  }catch(e){ gatewayResult.textContent='בדיקת Gateway נכשלה: '+e.message; }
   finally{gatewayBtn.disabled=false;}
 });
 
