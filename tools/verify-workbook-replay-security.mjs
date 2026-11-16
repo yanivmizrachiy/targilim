@@ -12,14 +12,20 @@ function check(label, pass) {
 
 const body = fs.readFileSync('generator/workbook/controls.js', 'utf8');
 function element(name = '') {
-  return {
-    name, value: '', className: '', textContent: '', innerHTML: '', hidden: false,
+  const el = {
+    name, value: '', className: '', innerHTML: '', hidden: false,
     selectedIndex: 0, children: [], options: [], dataset: {}, style: {}, attrs: {},
     appendChild(child) { this.children.push(child); },
     addEventListener() {},
     setAttribute(key, value) { this.attrs[key] = value; },
     querySelector() { return null; }
   };
+  let text = '';
+  Object.defineProperty(el, 'textContent', {
+    get() { return text; },
+    set(value) { text = String(value); this.children = []; }
+  });
+  return el;
 }
 async function scenario(hash) {
   const els = {};
