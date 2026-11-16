@@ -69,5 +69,5 @@ test('all three provider steps produce bounded readback reports in the same CI j
   assert.match(workflow, /steps\.model\.outputs\['final-message'\]/);
   assert.match(workflow, /node --test tools\/ai-lab-provider-contract\.test\.mjs tools\/ai-lab-commands\.test\.mjs tools\/ai-lab-result\.test\.mjs/);
   assert.equal((workflow.match(/AI_LAB_ACTION_STATUS:/g) ?? []).length, 3);
-  assert.equal((workflow.match(/AI_LAB_PROVIDER:/g) ?? []).length, 3);
+  assert.equal((workflow.match(/AI_LAB_PROVIDER: (?:gemini|claude|codex)\b/g) ?? []).length, 3);
 });
