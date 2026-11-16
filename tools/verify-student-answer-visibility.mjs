@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { loadEngines } from './engine-load.mjs';
 
 const read = path => readFileSync(path, 'utf8');
 const sandbox = { window: { TargilimEngine: {} } };
@@ -56,3 +57,43 @@ assert.match(print, /\.answer\.open\s*\{\s*display:\s*block\s*!important;/,
 assert.doesNotMatch(print, /(?:^|\n)\s*\.answer\s*\{\s*display:\s*block\s*!important;/,
   'print stylesheet must never reveal all answers by default');
 console.log('STUDENT_ANSWER_VISIBILITY_PASS — single MCQ, multi MCQ, worksheet, print');
+
+
+// Independent QA sweep against the actual generator registry, not synthetic MCQs.
+// Keep the teacher/internal answer key intact, while checking every student copy.
+const actual = loadEngines();
+const ids = [...actual.pilotIds, ...actual.sourceFitIds];
+assert.equal(ids.length, 50, 'all 50 curriculum engines are in the QA inventory');
+let checked = 0;
+let originallyMarked = 0;
+let alteredNonMarkerText = 0;
+const examples = [];
+for (const id of ids) {
+  for (const diff of ['basic', 'standard', 'challenge']) {
+    for (let i = 0; i < 20; i++) {
+      const item = actual.callEngine(id, diff, 'mcq');
+      if (!item || !/class="mcq-choices"/.test(item.questionHTML ?? '')) continue;
+      checked++;
+      const original = item.questionHTML;
+      const clean = actual.E.studentQuestionHTML(original);
+      const choiceCount = (original.match(/class="mcq-choice(?: mcq-correct)?\s*"/g) || []).length;
+      const cleanCount = (clean.match(/class="mcq-choice"/g) || []).length;
+      assert.equal(cleanCount, choiceCount, id + ': MCQ choices lost in student view');
+      assert.doesNotMatch(clean, /mcq-correct/, id + ': correctness leaked in student view');
+      assert.equal(actual.E.studentQuestionHTML(clean), clean, id + ': not idempotent');
+      const restored = clean.replace(/class="mcq-choice"/g, 'class="mcq-choice"');
+      if (!restored.includes('mcq-choice')) alteredNonMarkerText++;
+      const n = (original.match(/mcq-choice mcq-correct/g) || []).length;
+      if (n > 0) {
+        originallyMarked += n;
+        if (examples.length < 3) examples.push(id + '/' + diff + ': ' + n + ' teacher markers removed in view');
+      }
+      assert.ok(item.answerHTML, id + ': teacher answer disappeared');
+    }
+  }
+}
+assert.ok(checked >= 900, 'actual MCQ QA coverage too low: only ' + checked + ' samples');
+assert.ok(originallyMarked >= checked, 'at least one teacher correctness marker expected per sampled MCQ');
+assert.equal(alteredNonMarkerText, 0, 'sanitizer unexpectedly removed options');
+console.log('STUDENT_ANSWER_SWEEP_PASS — ' + checked + ' actual MCQs, '
+  + originallyMarked + ' internal correct markers protected, 50 engines, 3 difficulties');
