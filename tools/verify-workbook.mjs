@@ -99,6 +99,31 @@ for (const t of page.topics) {
 }
 check('replay: same settings + code rebuild the same document in a fresh page (' + page.topics.length + ' topics)', differ.length === 0, differ.join(', '));
 
+// Extending a uniform, single-topic document must not mutate its first items.
+// Test both fixed and mixed question types on the two independently checked
+// families; a longer graduated plan is intentionally exempt.
+const unstablePrefixes = [];
+for (const [id, grade] of [['G7-03-ENGINE', 7], ['N8-04-ENGINE', 8]]) {
+  page.els.st = Object.assign(page.els.st || {}, {
+    value: id, selectedIndex: 0, options: [{ textContent: id }]
+  });
+  for (const qtype of ['open', 'mixed']) {
+    const opts = Object.assign({}, base, {
+      grade, topics: [id], level: 'standard', progression: 'uniform', qtype
+    });
+    const short = compose(Object.assign({}, opts, { count: 5 }));
+    const longer = compose(Object.assign({}, opts, { count: 6 }));
+    const fingerprint = ex => ex.questionHTML + '||' + ex.answerHTML;
+    if (short.exercises.length !== 5 || longer.exercises.length !== 6 ||
+        short.exercises.map(fingerprint).join('##') !==
+        longer.exercises.slice(0, 5).map(fingerprint).join('##')) {
+      unstablePrefixes.push(id + '/' + qtype);
+    }
+  }
+}
+check('uniform seeded worksheets retain their first five items after extension',
+  unstablePrefixes.length === 0, unstablePrefixes.join(', '));
+
 // ── 4. teacher options ──
 const plan = (l, p, n) => run('levelPlan(' + JSON.stringify(l) + ',' + JSON.stringify(p) + ',' + n + ')');
 let planOk = true;
