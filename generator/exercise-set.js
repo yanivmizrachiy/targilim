@@ -143,6 +143,7 @@ function sharpenMathRects(html){
 }
 
 function renderExerciseSet(meta,exercises){
+  const E=window.TargilimEngine;
   if(typeof setMainTitle==='function')setMainTitle(meta.cls,meta.topicLabel);
   const cards=exercises.map(function(ex,i){
     const questionHTML=E.studentQuestionHTML(sharpenMathRects(ex.questionHTML));
