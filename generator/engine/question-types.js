@@ -59,6 +59,13 @@
   }
   E.normalizeChoices = normalizeChoices;
 
+  // Keep correctness metadata for teacher-side validation, but never publish its
+  // class marker in student-visible question markup (single or worksheet).
+  E.studentQuestionHTML = function(html){
+    return String(html == null ? '' : html)
+      .replace(/(<div class="mcq-choice) mcq-correct(?=")/g, '$1');
+  };
+
   E.questionTypes = {
     open: function(o){ return { questionHTML:(o.svg?'<div class="diagram">'+o.svg+'</div>':'')+'<div class="qtext">'+protectMathBidi(o.question)+'</div>', answerHTML:protectMathBidi(o.answer) }; },
     mcq: function(o){
