@@ -40,6 +40,18 @@ function makeExercise(id,diff,qtype,isEngine,E,mcqMode){
     meta:(typeof E.buildMeta==='function'?(function(){try{return E.buildMeta(id,'open',diff);}catch(e){return null}})():null)};
 }
 
+// Capture every correct option for the teacher key before removing answer
+// markers from the student-facing DOM/PNG/print HTML. Multiple correct answers
+// are supported; never infer the teacher key from already-sanitized student HTML.
+function prepareStudentQuestion(ex,E){
+  const source=String(ex.questionHTML||'');
+  const labels=[...source.matchAll(/<div class="mcq-choice mcq-correct"><span class="mcq-label">([^<]+)\./g)]
+    .map(function(m){return m[1];});
+  if(labels.length) ex.correctLabels=labels;
+  ex.questionHTML=E.studentQuestionHTML(source);
+  return ex;
+}
+
 function generateSet(){
   const id=document.getElementById('st').value;
   const count=+(document.getElementById('sn')?.value||10);
@@ -82,6 +94,7 @@ function generateSet(){
     ? '<div class="mcq-instruction">ייתכן שיותר מתשובה אחת נכונה — סמנו את כל התשובות הנכונות:</div>'
     : '<div class="mcq-instruction">סמנו את התשובה הנכונה (אחת בלבד):</div>';
   exercises.forEach(function(ex){
+    prepareStudentQuestion(ex,E);
     if(/class="mcq-choices"/.test(ex.questionHTML)&&!/mcq-instruction/.test(ex.questionHTML))
       ex.questionHTML=ex.questionHTML.replace('<div class="mcq-choices">',mcqInstr+'<div class="mcq-choices">');
   });
@@ -159,10 +172,8 @@ function renderExerciseSet(meta,exercises){
       +'</div>';
   }).join('');
   const keyItems=exercises.map(function(ex,i){
-    // list ALL correct MCQ labels (supports one or more correct answers)
-    const labels=(ex.questionHTML.match(/mcq-choice mcq-correct"><span class="mcq-label">([^<]+)\./g)||[])
-      .map(function(s){return s.replace(/.*mcq-label">([^<]+)\..*/,'$1');});
-    const all=labels.length?labels:(ex.correctLabel?[ex.correctLabel]:[]);
+    // Teacher-only answer data was captured before student HTML was sanitized.
+    const all=ex.correctLabels&&ex.correctLabels.length?ex.correctLabels:(ex.correctLabel?[ex.correctLabel]:[]);
     const correct=all.length?'<div class="ak-correct">'+(all.length>1?'התשובות הנכונות: ':'התשובה הנכונה: ')+all.join(', ')+'</div>':'';
     return '<div class="ak-item"><div class="ak-num">תרגיל '+(i+1)+'</div>'+correct+'<div class="ak-body">'+ex.answerHTML+'</div></div>';
   }).join('');
