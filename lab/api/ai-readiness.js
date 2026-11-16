@@ -35,6 +35,34 @@ export function collectReadiness(env = {}, headers = {}) {
   };
 }
 
+
+// A single opt-in, non-generative authentication probe. No model requests,
+// no balance value, no response body, no token value or remote error text exposed.
+export async function checkGatewayCredits(token, fetchImpl = fetch) {
+  if (!present(token)) return 'MISSING_AUTH';
+  try {
+    const response = await fetchImpl('https://ai-gateway.vercel.sh/v1/credits', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+      signal: AbortSignal.timeout(5000),
+      redirect: 'error',
+      cache: 'no-store',
+    });
+    if (response.status === 200) {
+      const type = response.headers?.get?.('content-type') || '';
+      if (!type.includes('application/json')) return 'UNEXPECTED_RESPONSE';
+      // Never materialize account balances or error text in output or logs.
+      return 'AUTHENTICATED_CREDITS_ENDPOINT';
+    }
+    if (response.status === 401) return 'AUTH_REJECTED_401';
+    if (response.status === 403) return 'AUTH_FORBIDDEN_403';
+    if (response.status === 402) return 'CREDITS_OR_QUOTA_402';
+    return 'UPSTREAM_HTTP_' + (Number.isInteger(response.status) ? response.status : 'UNKNOWN');
+  } catch {
+    return 'UPSTREAM_UNREACHABLE';
+  }
+}
+
 export default function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -42,5 +70,26 @@ export default function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
-  return res.status(200).json(collectReadiness(process.env, req.headers ?? {}));
+  const readiness = collectReadiness(process.env, req.headers ?? {});
+  if (req.query?.verify === 'credits') {
+    const h = Object.entries(req.headers ?? {}).find(([key]) =>
+      key.toLowerCase() === 'x-vercel-oidc-token'
+    )?.[1];
+    const token = present(process.env.AI_GATEWAY_API_KEY)
+      ? process.env.AI_GATEWAY_API_KEY
+      : (present(h) ? h : process.env.VERCEL_OIDC_TOKEN);
+    return checkGatewayCredits(token).then(status => {
+      const verified = status === 'AUTHENTICATED_CREDITS_ENDPOINT';
+      return res.status(200).json({
+        ...readiness,
+        gateway_account_verified: verified,
+        gateway_probe_status: status,
+        // A successful credits read does NOT verify a spend budget.
+        gateway_budget_verified: false,
+        model_calls_authorized: false,
+        model_calls_performed: 0,
+      });
+    });
+  }
+  return res.status(200).json(readiness);
 }
