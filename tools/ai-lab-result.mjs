@@ -16,6 +16,9 @@ export function sanitize(value) {
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
     .replace(/\b(?:sk-proj-|sk-ant-|gh[pousr]_|github_pat_|AIza)[A-Za-z0-9_-]{7,}/g, '[REDACTED_POSSIBLE_KEY]')
     .replace(/((?:api[_-]?key|access[_-]?token|authorization)\s*[:=]\s*)(?:Bearer\s+)?[^\s"'<>]+/gi, '$1[REDACTED]')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
     .slice(0, MAX_TEXT);
 }
 
@@ -45,7 +48,9 @@ export function buildReport(input) {
   const run = String(input.run ?? '');
   if (!/^[1-9][0-9]{0,16}$/.test(run)) throw new Error('run ID missing');
   const rawText = sanitize(input.output);
-  const status = input.actionStatus === 'success' ? 'CALL_FINISHED_RESULT_UNREVIEWED' : 'ACTION_NOT_VERIFIED';
+  const status = input.actionStatus === 'success'
+    ? (rawText ? 'CALL_FINISHED_RESULT_UNREVIEWED' : 'CALL_FINISHED_NO_READABLE_RESULT')
+    : 'ACTION_NOT_VERIFIED';
   return {
     schema: 'targilim-ai-lab-smoke-result/v1',
     repository: 'yanivmizrachiy/targilim',
