@@ -63,7 +63,7 @@
   // class marker in student-visible question markup (single or worksheet).
   E.studentQuestionHTML = function(html){
     return String(html == null ? '' : html)
-      .replace(/(<div class="mcq-choice) mcq-correct(?=")/g, '$1');
+      .replace(/(<div class="mcq-choice)(?: mcq-correct)?\s*(?=")/g, '$1');
   };
 
   E.questionTypes = {
