@@ -40,8 +40,10 @@ assert.match(single, /\$\{E\.studentQuestionHTML\(result\.questionHTML\)\}/,
   'single-question DOM passes through student sanitizer');
 
 const sheet = read('generator/exercise-set.js');
-assert.match(sheet, /const questionHTML=E\.studentQuestionHTML\(sharpenMathRects\(ex\.questionHTML\)\)/,
-  'worksheet card DOM passes through student sanitizer');
+assert.match(sheet, /const questionHTML=sharpenMathRects\(ex\.questionHTML\)/,
+  'worksheet preserves rectangle sanitizer');
+assert.ok(sheet.includes(`+'<div class="ex-body">'+E.studentQuestionHTML(questionHTML)+'</div>'`),
+  'worksheet DOM strips answer markers after rectangle sanitizer');
 assert.match(sheet, /ex\.questionHTML\.match\(\/mcq-choice mcq-correct/,
   'answer-key computation still uses original internal metadata');
 
