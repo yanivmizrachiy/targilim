@@ -24,6 +24,43 @@ test('AI Gateway key is detected only by presence and never returned', () => {
   assert.equal(result.gateway_budget_verified,false);
   assert.ok(!JSON.stringify(result).includes(secret));
 });
+test('runtime OIDC request header is detected as observed but never verified', () => {
+  const secret='very-sensitive-runtime-oidc-header';
+  const r=collectReadiness({}, {'x-vercel-oidc-token':secret});
+  assert.equal(r.gateway_auth,'OIDC_HEADER_PRESENT_NOT_VALIDATED');
+  assert.equal(r.gateway_account_verified,false);
+  assert.equal(r.gateway_budget_verified,false);
+  assert.equal(r.model_calls_authorized,false);
+  assert.ok(!JSON.stringify(r).includes(secret));
+});
+test('runtime OIDC header matching is case-insensitive', () => {
+  assert.equal(collectReadiness({}, {'X-Vercel-Oidc-Token':'opaque'}).gateway_auth,
+    'OIDC_HEADER_PRESENT_NOT_VALIDATED');
+});
+test('empty runtime OIDC header does not fake identity', () => {
+  assert.equal(collectReadiness({}, {'x-vercel-oidc-token':''}).gateway_auth,
+    'GATEWAY_AUTH_NOT_AVAILABLE');
+});
+test('API key presence takes priority without exposing key or OIDC header', () => {
+  const r=collectReadiness({AI_GATEWAY_API_KEY:'secret-key'}, {'x-vercel-oidc-token':'secret-token'});
+  assert.equal(r.gateway_auth,'GATEWAY_KEY_PRESENT_NOT_VALIDATED');
+  assert.equal(r.gateway_account_verified,false);
+  assert.ok(!JSON.stringify(r).includes('secret-key'));
+  assert.ok(!JSON.stringify(r).includes('secret-token'));
+});
+test('HTTP handler passes incoming OIDC header without returning its value', () => {
+  const state={code:0,body:null,headers:{}};
+  const response={
+    setHeader(k,v){state.headers[k]=v;return this;},
+    status(c){state.code=c;return this;},
+    json(b){state.body=b;return this;},
+  };
+  handler({method:'GET',headers:{'x-vercel-oidc-token':'a-realistic-secret-token'}},response);
+  assert.equal(state.code,200);
+  assert.equal(state.body.gateway_auth,'OIDC_HEADER_PRESENT_NOT_VALIDATED');
+  assert.ok(!JSON.stringify(state.body).includes('a-realistic-secret-token'));
+  assert.equal(state.headers['Cache-Control'],'no-store');
+});
 test('GET returns no-store and no model action', () => {
   const prev=process.env.VERCEL_OIDC_TOKEN;
   delete process.env.VERCEL_OIDC_TOKEN;
