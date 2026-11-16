@@ -15,7 +15,14 @@ test('gateway probe never prints or returns an OIDC token', () => {
   assert.deepEqual(result.provider_auth_verified, {gemini:false,claude:false,codex:false});
 });
 test('no credentials is reported as unavailable, not success', () => {
-  assert.equal(collectReadiness({}).gateway_auth, 'OIDC_TOKEN_NOT_AVAILABLE');
+  assert.equal(collectReadiness({}).gateway_auth, 'GATEWAY_AUTH_NOT_AVAILABLE');
+});
+test('AI Gateway key is detected only by presence and never returned', () => {
+  const secret='key-test-never-leak';
+  const result=collectReadiness({AI_GATEWAY_API_KEY:secret});
+  assert.equal(result.gateway_auth,'GATEWAY_KEY_PRESENT_NOT_VALIDATED');
+  assert.equal(result.gateway_budget_verified,false);
+  assert.ok(!JSON.stringify(result).includes(secret));
 });
 test('GET returns no-store and no model action', () => {
   const prev=process.env.VERCEL_OIDC_TOKEN;
