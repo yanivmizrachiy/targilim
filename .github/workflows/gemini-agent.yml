@@ -1,35 +1,22 @@
-name: Autonomous Gemini & OpenAI Cloud Agent
+# Retained historical workflow name for backwards compatibility only.
+# It previously auto-committed on issue comments but did not invoke Gemini/OpenAI.
+# The authorized AI-LAB coordination entry point is Issue #62 / PR #63.
+name: "Legacy Gemini/OpenAI agent - disabled (see AI Lab #62)"
 
 on:
-  issues:
-    types: [opened, labeled]
-  issue_comment:
-    types: [created]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  agent-runner:
-    if: contains(github.event.comment.body, '/fix') || contains(github.event.issue.title, '[AUTO]') || github.event_name == 'workflow_dispatch'
+  deprecation:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Run Autonomous Validation & Fixes
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Explain why this legacy workflow no longer performs actions
+        shell: bash
         run: |
-          python -c "print('🤖 Cloud Agent Active: Processing task...')"
-          if [ -f "scripts/validate_app_canonical_coverage.py" ]; then
-            python scripts/validate_app_canonical_coverage.py
-          fi
-
-      - name: Auto Commit & Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "auto(agent): autonomous fix & validation pass"
+          echo 'This workflow is intentionally inert.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'It does not call AI models, alter code, commit or deploy.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Use the reviewed AI Lab gateways tracked in Issue #62.' >> "$GITHUB_STEP_SUMMARY"
