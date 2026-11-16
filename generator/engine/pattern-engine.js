@@ -41,7 +41,7 @@
     if(typeof setMainTitle==='function') setMainTitle(cls,title);
     document.getElementById('out').innerHTML = `<div class="qcard engine-card" id="${cid}">
       <div class="qmeta"><span class="tag ${cls}">${gradeTag}</span><span class="tag ${cls}">${domainTag}</span></div>
-      ${result.questionHTML}
+      ${E.studentQuestionHTML(result.questionHTML)}
       <button class="btn-ans" onclick="document.getElementById('${aid}').classList.toggle('open')">הצג פתרון</button>
       <div class="answer" id="${aid}">${result.answerHTML}</div>
       <div class="expbar" data-html2canvas-ignore="true"><button class="btn-exp" onclick="copyImg('${cid}',this)">העתק כתמונה</button><button class="btn-exp" onclick="dlPNG('${cid}',this)">PNG</button><button class="btn-exp" onclick="window.print()">הדפס</button><span class="expstat" id="st-${cid}"></span></div>
