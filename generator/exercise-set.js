@@ -145,7 +145,7 @@ function sharpenMathRects(html){
 function renderExerciseSet(meta,exercises){
   if(typeof setMainTitle==='function')setMainTitle(meta.cls,meta.topicLabel);
   const cards=exercises.map(function(ex,i){
-    const questionHTML=sharpenMathRects(ex.questionHTML);
+    const questionHTML=E.studentQuestionHTML(sharpenMathRects(ex.questionHTML));
     const levelLabel=(ex.meta&&ex.meta.difficultyLabel)||({basic:'רמה 1',standard:'רמה 2',challenge:'רמה 3'}[ex.meta&&ex.meta.difficulty]||'');
     const levelTag=levelLabel?'<span class="tag level-tag">'+levelLabel+'</span>':'';
     return '<div class="qcard engine-card ex-card" id="exCard'+i+'" data-idx="'+i+'">'
