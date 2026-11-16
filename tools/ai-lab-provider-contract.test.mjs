@@ -51,3 +51,12 @@ test('three official provider actions are wired but never called in the PR contr
   assert.match(workflow, /secrets\.OPENAI_API_KEY/);
   assert.doesNotMatch(workflow, /(?:sk-proj-|sk-ant-)[A-Za-z0-9]/);
 });
+
+test('legacy false Gemini/OpenAI workflow is inert and cannot auto-commit', () => {
+  const old = readFileSync(join(root, '.github/workflows/gemini-agent.yml'), 'utf8');
+  assert.match(old, /workflow_dispatch:/);
+  assert.match(old, /permissions:\s*\n\s+contents: read/);
+  assert.doesNotMatch(old, /issue_comment:|\bissues:\s*\n|git-auto-commit-action|contents: write/);
+  assert.doesNotMatch(old, /uses:\s+(?:google-github-actions\/run-gemini-cli|anthropics\/claude-code-action|openai\/codex-action)/);
+  assert.match(old, /intentionally inert/);
+});
