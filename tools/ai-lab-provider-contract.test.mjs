@@ -60,3 +60,14 @@ test('legacy false Gemini/OpenAI workflow is inert and cannot auto-commit', () =
   assert.doesNotMatch(old, /uses:\s+(?:google-github-actions\/run-gemini-cli|anthropics\/claude-code-action|openai\/codex-action)/);
   assert.match(old, /intentionally inert/);
 });
+
+test('all three provider steps produce bounded readback reports in the same CI job', () => {
+  assert.equal((workflow.match(/id: model/g) ?? []).length, 3);
+  assert.equal((workflow.match(/run: node tools\/ai-lab-result\.mjs/g) ?? []).length, 3);
+  assert.match(workflow, /steps\.model\.outputs\.summary/);
+  assert.match(workflow, /steps\.model\.outputs\.execution_file/);
+  assert.match(workflow, /steps\.model\.outputs\['final-message'\]/);
+  assert.match(workflow, /node --test tools\/ai-lab-provider-contract\.test\.mjs tools\/ai-lab-commands\.test\.mjs tools\/ai-lab-result\.test\.mjs/);
+  assert.equal((workflow.match(/AI_LAB_ACTION_STATUS:/g) ?? []).length, 3);
+  assert.equal((workflow.match(/AI_LAB_PROVIDER:/g) ?? []).length, 3);
+});
