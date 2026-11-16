@@ -1,0 +1,191 @@
+name: "TARGILIM AI LAB - provider smoke (manual only)"
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - ".github/workflows/ai-lab-provider-smoke.yml"
+      - "tools/ai-lab-provider-contract.test.mjs"
+      - "tools/ai-lab-commands.mjs"
+      - "tools/ai-lab-commands.test.mjs"
+      - "tools/ai-lab-result.mjs"
+      - "tools/ai-lab-result.test.mjs"
+      - "tools/ai-lab-gateway-readiness.test.mjs"
+      - "lab/api/ai-readiness.js"
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Run exactly one provider"
+        required: true
+        type: choice
+        options: [gemini, claude, codex]
+      approval:
+        description: "Type I_APPROVE_ONE_CALL to authorize one potentially metered call"
+        required: true
+        type: string
+        default: "NOT_APPROVED"
+permissions:
+  contents: read
+concurrency:
+  group: ai-lab-provider-smoke
+  cancel-in-progress: false
+jobs:
+  contract:
+    if: >-
+      github.repository == 'yanivmizrachiy/targilim' &&
+      (
+        github.event_name != 'issue_comment' ||
+        (
+          github.actor == 'yanivmizrachiy' &&
+          github.event.issue.number == 62 &&
+          startsWith(github.event.comment.body, '/ai-lab smoke ')
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate provider contract without calling models
+        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs tools/ai-lab-result.test.mjs tools/ai-lab-gateway-readiness.test.mjs
+  approve:
+    needs: contract
+    if: >-
+      github.actor == 'yanivmizrachiy' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'issue_comment' &&
+        github.event.issue.number == 62 &&
+        startsWith(github.event.comment.body, '/ai-lab smoke ')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      provider: ${{ steps.gate.outputs.provider }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Require exact owner authorization for one metered call
+        id: gate
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: ${{ inputs.provider }}
+          AI_LAB_APPROVAL: ${{ inputs.approval }}
+          AI_LAB_COMMENT: ${{ github.event.comment.body }}
+          AI_LAB_ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: node tools/ai-lab-commands.mjs
+  gemini:
+    needs: approve
+    if: needs.approve.outputs.provider == 'gemini'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Gemini authentication metadata
+        shell: bash
+        env:
+          HAS_KEY: ${{ secrets.GEMINI_API_KEY != '' }}
+        run: |
+          test "$HAS_KEY" = 'true' || { echo 'BLOCKED: GEMINI_API_KEY is not configured'; exit 1; }
+      - name: Read-only Gemini pedagogical connection test
+        id: model
+        uses: google-github-actions/run-gemini-cli@v0
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          settings: >-
+            {"tools":{"core":["read_file","read_many_files","list_directory","glob","grep_search"]},"model":{"maxSessionTurns":4},"billing":{"overageStrategy":"never"}}
+          prompt: |
+            Read RULES.md and docs/SOURCE_BIBLE.md. Report three concrete Grade 7-8
+            pedagogical constraints with file paths. No file changes, shell commands,
+            commits, GitHub comments, or PRs. The Gemini tool allowlist permits
+            read-only repository inspection only. This is a one-call smoke test.
+
+      - name: Publish bounded Gemini result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: gemini
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_MODEL_OUTPUT: ${{ steps.model.outputs.summary }}
+        run: node tools/ai-lab-result.mjs
+  claude:
+    needs: approve
+    if: needs.approve.outputs.provider == 'claude'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check exactly one Claude authentication method
+        shell: bash
+        env:
+          API_PRESENT: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          OAUTH_PRESENT: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          test "$API_PRESENT:$OAUTH_PRESENT" = 'true:false' || test "$API_PRESENT:$OAUTH_PRESENT" = 'false:true' || { echo 'BLOCKED: configure exactly one Claude authentication method'; exit 1; }
+      - name: Read-only Claude engineering connection test
+        id: model
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read RULES.md and PROJECT_STATUS.md. Report three exact engineering
+            constraints with file paths. Do not edit, comment, commit or open PRs.
+          claude_args: "--max-turns 2 --max-budget-usd 0.50 --allowedTools Read,Glob,Grep"
+
+      - name: Publish bounded Claude result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: claude
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_CLAUDE_FILE: ${{ steps.model.outputs.execution_file }}
+        run: node tools/ai-lab-result.mjs
+  codex:
+    needs: approve
+    if: needs.approve.outputs.provider == 'codex'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Codex authentication metadata
+        shell: bash
+        env:
+          HAS_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          test "$HAS_KEY" = 'true' || { echo 'BLOCKED: OPENAI_API_KEY is not configured'; exit 1; }
+      - name: Read-only Codex verification connection test
+        id: model
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":read-only"
+          effort: low
+          prompt: |
+            Read RULES.md, package.json and tools/ai-lab-preflight.mjs.
+            Report three repository engineering facts with file paths.
+            Do not edit, commit, post comments or start another agent.
+
+      - name: Publish bounded Codex result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: codex
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_MODEL_OUTPUT: ${{ steps.model.outputs['final-message'] }}
+        run: node tools/ai-lab-result.mjs
