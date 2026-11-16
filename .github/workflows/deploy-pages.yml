@@ -1,9 +1,9 @@
 name: Deploy targilim to GitHub Pages
 on:
-  push:
-    branches: [main]
+  # An explicit owner action is required; a merge/push never deploys by itself.
   workflow_dispatch:
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -12,12 +12,36 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main' && github.actor == 'yanivmizrachiy' && github.triggering_actor == 'yanivmizrachiy'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Require current main and a successful deep verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="$(git rev-parse HEAD)"
+          LIVE_MAIN="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ "$SHA" != "$LIVE_MAIN" ]; then
+            echo "Refusing stale release: checked-out commit differs from main."
+            exit 1
+          fi
+          # Check the real push-triggered gate for THIS exact commit, not a green
+          # workflow for another branch or an older commit.
+          RUNS="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${SHA}&per_page=100")"
+          echo "$RUNS" | jq --arg sha "$SHA" -e '
+            [.workflow_runs[] |
+              select(.head_sha == $sha and
+                     .name == "Verify Targilim Deep" and
+                     .event == "push" and
+                     .conclusion == "success")] | length > 0
+          ' || { echo "No successful verify:deep push run for current main."; exit 1; }
       - name: Verify generator exists
         run: test -f generator/index.html || (echo "generator/index.html missing" && exit 1)
       - name: Bundle learning-material PDFs into the published site
@@ -29,6 +53,12 @@ jobs:
           done
           echo "Bundled $(ls -1 generator/assets/sources/*.pdf | wc -l) learning-material PDFs."
           test "$(ls -1 generator/assets/sources/*.pdf | wc -l)" -eq 10 || (echo "expected 10 learning-material PDFs" && exit 1)
+      - name: Refuse publication if main advanced during bundle preparation
+        run: |
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$(git rev-parse HEAD)" || {
+            echo "main advanced after verification; refusing stale deployment."
+            exit 1
+          }
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
