@@ -607,7 +607,8 @@ svg text { unicode-bidi: plaintext; }
     break-inside: avoid;
     padding: 20px;
   }
-  .answer { display: block !important; border-right: 3px solid #16a34a; }
+  .answer:not(.open) { display: none !important; }
+  .answer.open { display: block !important; border-right: 3px solid #16a34a; }
   main { padding: 0; max-width: 100%; }
   .tag { border: 1px solid #e2e8f0; }
 

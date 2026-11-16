@@ -143,6 +143,7 @@ function sharpenMathRects(html){
 }
 
 function renderExerciseSet(meta,exercises){
+  const E=window.TargilimEngine;
   if(typeof setMainTitle==='function')setMainTitle(meta.cls,meta.topicLabel);
   const cards=exercises.map(function(ex,i){
     const questionHTML=sharpenMathRects(ex.questionHTML);
@@ -150,7 +151,7 @@ function renderExerciseSet(meta,exercises){
     const levelTag=levelLabel?'<span class="tag level-tag">'+levelLabel+'</span>':'';
     return '<div class="qcard engine-card ex-card" id="exCard'+i+'" data-idx="'+i+'">'
       +'<div class="qmeta" data-html2canvas-ignore="true"><span class="ex-num">תרגיל '+(i+1)+'</span>'+levelTag+'</div>'
-      +'<div class="ex-body">'+questionHTML+'</div>'
+      +'<div class="ex-body">'+E.studentQuestionHTML(questionHTML)+'</div>'
       +workAreaHTML(ex)
       +'<div class="ex-imgbar" data-html2canvas-ignore="true">'
         +'<button class="btn-img btn-img-primary btn-img-copy" onclick="exImageCopy('+i+',this)">📋 העתק כתמונה</button>'
