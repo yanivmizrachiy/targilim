@@ -18,13 +18,16 @@ function seeded(seed) {
 }
 const original = Math.random;
 const DRAWS = Number(process.env.INTEGRITY_DRAWS || 40);
+check('integrity sample size is a positive integer', Number.isInteger(DRAWS) && DRAWS > 0 && DRAWS <= 2000, String(DRAWS));
 
 const { E, pilotIds, sourceFitIds, callEngine } = loadEngines();
 const ids = pilotIds.concat(sourceFitIds);
 check('engines loaded (50)', ids.length === 50, String(ids.length));
+check('engine identifiers are unique', new Set(ids).size === ids.length);
 
 const CHOICE = /<div class="mcq-choice( mcq-correct)?\s*"><span class="mcq-label">([^<]+?)\.?<\/span>\s*([\s\S]*?)<\/div>/g;
-const dupes = [], keys = [], few = [], subItems = [];
+const dupes = [], keys = [], few = [], subItems = [], missing = [];
+const byEngine = new Map(ids.map(id => [id, 0]));
 let mcqCount = 0;
 for (const id of ids) {
   for (const diff of ['basic', 'standard', 'challenge']) {
@@ -32,8 +35,12 @@ for (const id of ids) {
       Math.random = seeded(ids.indexOf(id) * 100000 + i * 7 + diff.length);
       let r;
       try { r = callEngine(id, diff, 'mcq'); } finally { Math.random = original; }
-      if (!r || !/class="mcq-choices"/.test(r.questionHTML)) continue;
+      if (!r || typeof r.questionHTML !== 'string' || !/class="mcq-choices"/.test(r.questionHTML)) {
+        missing.push(id + '/' + diff + '/draw-' + i);
+        continue;
+      }
       mcqCount++;
+      byEngine.set(id, byEngine.get(id) + 1);
       const opts = [...r.questionHTML.matchAll(CHOICE)].map(m => ({ correct: !!m[1], text: m[3].replace(/\s+/g, ' ').trim() }));
       const texts = opts.map(o => o.text);
       if (new Set(texts).size !== texts.length) dupes.push(id + '/' + diff + ': ' + texts.join(' | '));
@@ -44,7 +51,11 @@ for (const id of ids) {
     }
   }
 }
-check('multiple choice sampled across all engines (' + mcqCount + ' items)', mcqCount > 1000, String(mcqCount));
+const expected = ids.length * 3 * DRAWS;
+const uncovered = [...byEngine].filter(([, n]) => n !== 3 * DRAWS);
+check('all expected MCQs generated (' + mcqCount + '/' + expected + ')', mcqCount === expected, String(mcqCount));
+check('no engine or difficulty silently skipped', missing.length === 0, missing.slice(0, 6).join(', '));
+check('every engine has full MCQ sample coverage', uncovered.length === 0, uncovered.slice(0, 6).map(([id, n]) => id + ': ' + n).join(', '));
 check('no multiple-choice item repeats an option', dupes.length === 0, dupes.slice(0, 4).join(' || '));
 check('every multiple-choice item has exactly one correct option (single mode)', keys.length === 0, keys.slice(0, 4).join(' || '));
 check('every multiple-choice item offers at least two options', few.length === 0, few.slice(0, 4).join(', '));
@@ -52,7 +63,7 @@ check('no א/ב sub-items in a multiple-choice question (they collide with the o
 
 // G8-07: drawing ↔ answer consistency
 const ARCS = { 'צ.צ.צ': 0, 'צ.ז.צ': 2, 'ז.צ.ז': 6 };
-const mismatch = [];
+const mismatch = [], missingG807 = [];
 let g807 = 0;
 for (const diff of ['basic', 'standard', 'challenge']) {
   for (const qt of ['open', 'mcq', 'tf', 'mistake']) {
@@ -60,7 +71,10 @@ for (const diff of ['basic', 'standard', 'challenge']) {
       Math.random = seeded(9000 + i * 13 + qt.length * 3 + diff.length);
       let r;
       try { r = callEngine('G8-07-ENGINE', diff, qt); } finally { Math.random = original; }
-      if (!r) continue;
+      if (!r || typeof r.questionHTML !== 'string' || typeof r.answerHTML !== 'string') {
+        missingG807.push(diff + '/' + qt + '/draw-' + i);
+        continue;
+      }
       g807++;
       const thm = Object.keys(ARCS).find(t => r.answerHTML.includes(t));
       const arcs = (r.questionHTML.match(/data-mark="angle"/g) || []).length;
@@ -68,7 +82,8 @@ for (const diff of ['basic', 'standard', 'challenge']) {
     }
   }
 }
-check('G8-07: the drawing marks exactly the theorem in the answer (' + g807 + ' items)', g807 > 0 && mismatch.length === 0, mismatch.slice(0, 4).join(' || '));
+check('G8-07: all theorem samples generated (' + g807 + '/' + (12 * DRAWS) + ')', g807 === 12 * DRAWS && missingG807.length === 0, missingG807.slice(0, 6).join(', '));
+check('G8-07: the drawing marks exactly the theorem in the answer (' + g807 + ' items)', mismatch.length === 0, mismatch.slice(0, 4).join(' || '));
 
 console.log(fails ? 'ENGINE_INTEGRITY_FAIL (' + fails + ')' : 'ENGINE_INTEGRITY_PASS');
 process.exit(fails ? 1 : 0);
