@@ -69,3 +69,12 @@ GitHub > targilim > Settings > Secrets and variables > Actions:
 - בדיקות רגרסיה מוודאות שהכותרת מזוהה ללא הדלפתה, גם עם אותיות גדולות/קטנות, ומסרבים להסיק תקציב או חיוב.
 - כפתור רענון בדיקות GitHub במסך הבקרה אינו נעול עוד ל־SHA ישן; הוא מחפש קודם את ה־SHA הנוכחי של PR #63 ומחזיר במפורש אם אין לו הרשאת קריאה ל־API הציבורי. תוצאות ברירת המחדל הן היסטוריות בלבד.
 - **אין לבצע קריאות מודלים או לחשוף את אסימון OIDC בצד הלקוח.** אימות Gateway ובקרת תקציב נדרשים בנפרד.
+
+## אימות Gateway דרך נקודת קרדיטים (16.11.2026)
+- תוקן זיהוי OIDC בזמן ריצת Vercel Function: כותרת `x-vercel-oidc-token` נמצאה, אך קיום כותרת לבדו **אינו** אימות הרשאה.
+- נוסף מסלול GET יזום בלבד: `/api/ai-readiness?verify=credits`. השרת מוסר את האסימון רק בבקשת GET אחת ל-`https://ai-gateway.vercel.sh/v1/credits`, ללא קריאת מודל, ללא החזרת תוכן תגובת הקרדיטים, ללא החזרת מפתח, עם timeout 5 שניות וללא retry.
+- בבדיקת השרת החיה (Deployment `dpl_4cTkQbZw4X5qf6rcWi462AtCj4eH`, כתובת קבועה `https://targilim-ai-lab.vercel.app/api/ai-readiness?verify=credits`) התקבל **HTTP 200**, `gateway_probe_status: AUTHENTICATED_CREDITS_ENDPOINT`, `gateway_account_verified: true`, `gateway_budget_verified: false`, `model_calls_performed: 0`.
+- המשמעות: **הרשאת OIDC ל־AI Gateway אומתה לנתיב המידע בלבד**, אך אין עדיין תקרת הוצאה/יתרת חשבון מאומתת לשימוש במודלים. ה־API לא מספק הוכחת תקציב וכניסה לתצוגת הקרדיטים אינה הרשאה לבצע חיוב.
+- נתיב קוד: `lab/api/ai-readiness.js`. בדיקות: `tools/ai-lab-gateway-readiness.test.mjs`, כולל 401/403/402, דרישת GET, איסור הדלפת אסימון או סכום, וריסון כשלי רשת. `node --test` עבר במכונת Vercel Sandbox ב־SHA `24ec947a037fe29d21e692a4af5ef366dbb8d839`, ו־`npm run verify:deep` באותו SHA עבר.
+- התקציב של AI Gateway חייב להיקבע בממשק החשבון/CLI בהרשאת בעלים; ב־Vercel API לבדיקת שימוש התקבלה קודם שגיאת 403. אל תיצור או תגדיל תקציב, אל תגדיר auto-top-up, אל תפנה ל־BYOK ואל תבצע בקשות inference ללא הרשאה מפורשת. תקרות Gateway הן soft caps.
+- אין מיזוג PR #63 או פריסה למחולל התרגילים; הפריסה שבוצעה היא **מסך בקרה נפרד**.
