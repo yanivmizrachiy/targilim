@@ -8,6 +8,8 @@ on:
     paths:
       - ".github/workflows/ai-lab-provider-smoke.yml"
       - "tools/ai-lab-provider-contract.test.mjs"
+      - "tools/ai-lab-commands.mjs"
+      - "tools/ai-lab-commands.test.mjs"
   workflow_dispatch:
     inputs:
       provider:
@@ -27,7 +29,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   contract:
-    if: github.repository == 'yanivmizrachiy/targilim'
+    if: >-
+      github.repository == 'yanivmizrachiy/targilim' &&
+      (
+        github.event_name != 'issue_comment' ||
+        (
+          github.actor == 'yanivmizrachiy' &&
+          github.event.issue.number == 62 &&
+          startsWith(github.event.comment.body, '/ai-lab smoke ')
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -38,41 +49,35 @@ jobs:
         with:
           node-version: "22"
       - name: Validate provider contract without calling models
-        run: node --test tools/ai-lab-provider-contract.test.mjs
+        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs
   approve:
     needs: contract
     if: >-
       github.actor == 'yanivmizrachiy' &&
       (github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'issue_comment' && github.event.issue.number == 62))
+       (github.event_name == 'issue_comment' &&
+        github.event.issue.number == 62 &&
+        startsWith(github.event.comment.body, '/ai-lab smoke ')))
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
       provider: ${{ steps.gate.outputs.provider }}
     steps:
-      - name: Require one explicitly authorized paid call
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Require exact owner authorization for one metered call
         id: gate
         shell: bash
         env:
-          PROVIDER: ${{ inputs.provider }}
-          APPROVAL: ${{ inputs.approval }}
-          COMMENT: ${{ github.event.comment.body }}
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          set -euo pipefail
-          if [ "$EVENT_NAME" = 'issue_comment' ]; then
-            case "$COMMENT" in
-              '/ai-lab smoke gemini I_APPROVE_ONE_CALL') PROVIDER=gemini ;;
-              '/ai-lab smoke claude I_APPROVE_ONE_CALL') PROVIDER=claude ;;
-              '/ai-lab smoke codex I_APPROVE_ONE_CALL') PROVIDER=codex ;;
-              *) echo 'No exact owner-approved command; no model calls made.'; exit 1 ;;
-            esac
-          else
-            test "$APPROVAL" = 'I_APPROVE_ONE_CALL' || { echo 'Not approved. No model calls made.'; exit 1; }
-            case "$PROVIDER" in gemini|claude|codex) ;; *) echo 'Invalid provider'; exit 1 ;; esac
-          fi
-          echo "provider=$PROVIDER" >> "$GITHUB_OUTPUT"
-          echo "One provider smoke requested: $PROVIDER" >> "$GITHUB_STEP_SUMMARY"
+          AI_LAB_PROVIDER: ${{ inputs.provider }}
+          AI_LAB_APPROVAL: ${{ inputs.approval }}
+          AI_LAB_COMMENT: ${{ github.event.comment.body }}
+          AI_LAB_ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: node tools/ai-lab-commands.mjs
   gemini:
     needs: approve
     if: needs.approve.outputs.provider == 'gemini'
