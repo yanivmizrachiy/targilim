@@ -33,10 +33,29 @@
     if (!box) return;
     const list = root.__docTopics;
     box.hidden = !list.length;
-    box.innerHTML = list.length
-      ? '<span class="topic-list-label">נושאים במסמך:</span>' + list.map((t, i) =>
-        '<span class="topic-chip">' + t.label + '<button type="button" class="topic-chip-x" data-i="' + i + '" aria-label="הסר את ' + t.label + '">×</button></span>').join('')
-      : '';
+    // Do not parse topic labels as HTML: replay URL data must remain inert text.
+    box.textContent = '';
+    if (list.length) {
+      const heading = document.createElement('span');
+      heading.className = 'topic-list-label';
+      heading.textContent = 'נושאים במסמך:';
+      box.appendChild(heading);
+      list.forEach(function(t, i) {
+        const chip = document.createElement('span');
+        chip.className = 'topic-chip';
+        const label = document.createElement('span');
+        label.textContent = String(t.label || '');
+        chip.appendChild(label);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'topic-chip-x';
+        remove.dataset.i = String(i);
+        remove.setAttribute('aria-label', 'הסר את ' + String(t.label || ''));
+        remove.textContent = '×';
+        chip.appendChild(remove);
+        box.appendChild(chip);
+      });
+    }
     note();
   }
 
@@ -91,28 +110,34 @@
     const h = String(root.location && root.location.hash || '').replace(/^#/, '');
     if (!h) return;
     const p = new URLSearchParams(h);
+    const requestedGrade = p.get('g');
+    if (requestedGrade !== '7' && requestedGrade !== '8') return;
     const topics = (p.get('t') || '').split(',').filter(Boolean);
-    if (!topics.length || !W.rng.isSeedCode(p.get('s'))) return;
-    // core.js declares TOPICS/generators with const: global bindings, not window properties
-    const gens = () => (typeof generators !== 'undefined' ? generators : {});
+    if (!topics.length || topics.length > 50 || new Set(topics).size !== topics.length ||
+        !W.rng.isSeedCode(p.get('s'))) return;
+    // A valid replay can reference only topics registered for its selected grade.
+    // Phase-2 topics load asynchronously, so wait for the registry, then fail
+    // closed rather than displaying an unknown URL value as a topic label.
     const topicsTable = () => (typeof TOPICS !== 'undefined' ? TOPICS : {});
-    const known = id => capability(id).kind !== 'legacy' || !!gens()[id];
-    await waitFor(() => topics.every(known), 4000);
-    const set = (id, v) => { const el = $(id); if (el && v != null && [...(el.options || [])].some(o => o.value === v)) el.value = v; };
-    set('sg', p.get('g'));
-    if (typeof root.onGrade === 'function') root.onGrade();
     const labelOf = id => {
+      const grade = topicsTable()[+requestedGrade];
       for (const d of ['geometry', 'algebra', 'numeric', 'uncertainty']) {
-        const grade = topicsTable()[+p.get('g')];
         const list = (grade && grade[d]) || [];
         const hit = list.find(t => t[0] === id);
         if (hit) return { label: typeof root.cleanTopicLabel === 'function' ? root.cleanTopicLabel(hit[1]) : hit[1], domain: d };
       }
       return null;
     };
+    if (!(await waitFor(() => topics.every(id => !!labelOf(id)), 4000))) return;
+    const set = (id, v) => { const el = $(id); if (el && v != null && [...(el.options || [])].some(o => o.value === v)) el.value = v; };
+    set('sg', requestedGrade);
+    if (typeof root.onGrade === 'function') root.onGrade();
     const first = labelOf(topics[0]);
-    if (first) { set('sd', first.domain); if (typeof root.onDomain === 'function') root.onDomain(); set('st', topics[0]); }
-    root.__docTopics = topics.length > 1 ? topics.map(id => ({ id: id, label: (labelOf(id) || { label: id }).label })) : [];
+    if (!first) return;
+    set('sd', first.domain);
+    if (typeof root.onDomain === 'function') root.onDomain();
+    set('st', topics[0]);
+    root.__docTopics = topics.length > 1 ? topics.map(id => ({ id: id, label: labelOf(id).label })) : [];
     set('sn', p.get('n')); set('sl', p.get('l')); set('sprog', p.get('p')); set('sdoc', p.get('d'));
     set('selQType', p.get('q')); set('selMcqMode', p.get('m'));
     if ($('sseed')) $('sseed').value = p.get('s');
