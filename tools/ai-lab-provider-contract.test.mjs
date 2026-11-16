@@ -9,7 +9,13 @@ const workflow = readFileSync(join(root, '.github/workflows/ai-lab-provider-smok
 
 test('no issue/PR-triggered provider execution', () => {
   assert.match(workflow, /workflow_dispatch:\s*\n/);
-  assert.match(workflow, /github\.event_name == 'workflow_dispatch' && github\.actor == 'yanivmizrachiy'/);
+  assert.match(workflow, /github\.actor == 'yanivmizrachiy'/);
+  assert.match(workflow, /github\.event\.issue\.number == 62/);
+  assert.match(workflow, /github\.event_name == 'workflow_dispatch'/);
+  assert.match(workflow, /github\.event_name == 'issue_comment'/);
+  for (const provider of ['gemini','claude','codex']) {
+    assert.ok(workflow.includes('/ai-lab smoke ' + provider + ' I_APPROVE_ONE_CALL'));
+  }
   assert.match(workflow, /needs: approve/g);
   assert.match(workflow, /if: needs\.approve\.outputs\.provider == 'gemini'/);
   assert.match(workflow, /if: needs\.approve\.outputs\.provider == 'claude'/);
