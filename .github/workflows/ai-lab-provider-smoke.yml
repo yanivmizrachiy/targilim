@@ -92,10 +92,13 @@ jobs:
         uses: google-github-actions/run-gemini-cli@v0
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          settings: >-
+            {"tools":{"core":["read_file","read_many_files","list_directory","glob","grep_search"]},"model":{"maxSessionTurns":4},"billing":{"overageStrategy":"never"}}
           prompt: |
             Read RULES.md and docs/SOURCE_BIBLE.md. Report three concrete Grade 7-8
             pedagogical constraints with file paths. No file changes, shell commands,
-            commits, GitHub comments, or PRs. This is a one-call smoke test.
+            commits, GitHub comments, or PRs. The Gemini tool allowlist permits
+            read-only repository inspection only. This is a one-call smoke test.
   claude:
     needs: approve
     if: needs.approve.outputs.provider == 'claude'
@@ -121,7 +124,7 @@ jobs:
           prompt: |
             Read RULES.md and PROJECT_STATUS.md. Report three exact engineering
             constraints with file paths. Do not edit, comment, commit or open PRs.
-          claude_args: "--max-turns 2 --allowedTools Read,Glob,Grep"
+          claude_args: "--max-turns 2 --max-budget-usd 0.50 --allowedTools Read,Glob,Grep"
   codex:
     needs: approve
     if: needs.approve.outputs.provider == 'codex'
