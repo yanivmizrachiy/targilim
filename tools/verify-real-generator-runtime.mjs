@@ -133,11 +133,15 @@ if (!loadError) {
   check('single mode prints "תשובה אחת נכונה" instruction',
     /mcq-instruction[^>]*>[^<]*התשובה הנכונה \(אחת בלבד\)/.test(singleHtml));
   check('single mode does NOT print the multi instruction', !singleHtml.includes('כל התשובות הנכונות'));
+  check('single-mode student DOM does not reveal the correct choice',
+    !singleHtml.split('<div class="answer-key"')[0].includes('mcq-correct'));
   els.selMcqMode.value='multi'; vm.runInContext('generate()', sandbox);
   const multiHtml = els.out.innerHTML;
   check('multi mode prints "ייתכן יותר מאחת — סמנו את כל הנכונות" instruction',
     /mcq-instruction[^>]*>[^<]*ייתכן שיותר מתשובה אחת נכונה[^<]*סמנו את כל התשובות הנכונות/.test(multiHtml));
   check('multi mode does NOT print the single-only instruction', !multiHtml.includes('(אחת בלבד)'));
+  check('multi-mode student DOM does not reveal correct choices',
+    !multiHtml.split('<div class="answer-key"')[0].includes('mcq-correct'));
   // restore defaults for the remaining tests
   els.selQType.value='mixed'; els.selMcqMode.value='single';
 
