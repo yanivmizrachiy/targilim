@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import handler, {collectReadiness} from '../lab/api/ai-readiness.js';
+import handler, {collectReadiness, checkGatewayCredits} from '../lab/api/ai-readiness.js';
 
 test('gateway probe never prints or returns an OIDC token', () => {
   const opaque = 'private-oidc-token-for-a-unit-test';
@@ -86,4 +86,45 @@ test('unsafe HTTP methods are rejected', () => {
   handler({method:'POST'},res);
   assert.equal(state.status,405);
   assert.equal(state.body.error,'METHOD_NOT_ALLOWED');
+});
+
+
+test('read-only credits check uses one authenticated GET and returns no balance', async () => {
+  const calls = [];
+  const fakeFetch = async (url, options) => {
+    calls.push({url, options});
+    return {
+      status: 200,
+      headers: {get: () => 'application/json; charset=utf-8'},
+      json: async () => ({balance:'SENSITIVE_BALANCE', lifetime_spend:'SENSITIVE_SPEND'}),
+    };
+  };
+  const result = await checkGatewayCredits('PRIVATE_TOKEN_VALUE', fakeFetch);
+  assert.equal(result, 'AUTHENTICATED_CREDITS_ENDPOINT');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://ai-gateway.vercel.sh/v1/credits');
+  assert.equal(calls[0].options.method, 'GET');
+  assert.equal(calls[0].options.redirect, 'error');
+  assert.equal(calls[0].options.headers.Authorization, 'Bearer PRIVATE_TOKEN_VALUE');
+  assert.ok(!result.includes('PRIVATE_TOKEN_VALUE'));
+  assert.ok(!result.includes('SENSITIVE_BALANCE'));
+});
+
+test('credits check fails closed on absence and rejection of auth', async () => {
+  let calls = 0;
+  const unused = async () => { calls++; throw Error('SHOULD_NOT_BE_CALLED'); };
+  assert.equal(await checkGatewayCredits('', unused), 'MISSING_AUTH');
+  assert.equal(calls, 0);
+  for (const [code, expected] of [[401,'AUTH_REJECTED_401'],[403,'AUTH_FORBIDDEN_403'],[402,'CREDITS_OR_QUOTA_402']]) {
+    const fake = async () => ({status:code, headers:{get:()=> 'application/json'}});
+    assert.equal(await checkGatewayCredits('token', fake), expected);
+  }
+});
+
+test('credits check never returns remote response payload, upstream exception or untrusted HTML', async () => {
+  const badText = 'SENSITIVE_UPSTREAM_SECRET';
+  const fakeFetch = async () => ({status:200, headers:{get:()=> 'text/html'}, text:async()=>badText});
+  assert.equal(await checkGatewayCredits('token', fakeFetch), 'UNEXPECTED_RESPONSE');
+  const throws = async () => {throw new Error(badText);};
+  assert.equal(await checkGatewayCredits('token', throws), 'UPSTREAM_UNREACHABLE');
 });
