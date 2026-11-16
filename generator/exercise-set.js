@@ -60,9 +60,11 @@ function readOptions(){
 // ── 2. Plans: question types and levels ───────────────────────────────────
 function buildTypePlan(qtype,count,rng){
   if(qtype!=='mixed')return Array(count).fill(qtype);
-  const TYPES=['open','mcq','tf','mistake'],plan=[];
-  for(let i=0;i<count;i++)plan.push(TYPES[i%TYPES.length]);
-  return rng?rng.shuffle(plan):plan;
+  // A stable per-document rotation yields a balanced mix. Crucially, changing
+  // count never reshuffles the types of already generated questions.
+  const TYPES=['open','mcq','tf','mistake'];
+  const offset=rng?rng.int(0,TYPES.length-1):Math.floor(Math.random()*TYPES.length);
+  return Array.from({length:count},function(_,i){return TYPES[(i+offset)%TYPES.length]});
 }
 // Uniform: every item at the selected level. Graduated: an intentional climb
 // to the selected target (target רמה 1 has nothing to climb to → uniform).
@@ -157,7 +159,9 @@ function assignPoints(items){
 function composeDocument(o){
   const W=window.TargilimWorkbook;
   const E=window.TargilimEngine||{};
-  const root=W?W.rng.createRng(o.seed+'|'+[o.grade,o.topics.join('+'),o.count,o.level,o.progression,o.docType,o.qtype,o.mcqMode].join('|')):null;
+  // Count must not perturb earlier slots when a uniform, single-topic worksheet grows.
+  // Graduated difficulty and multi-topic allocations intentionally depend on count.
+  const root=W?W.rng.createRng(o.seed+'|'+[o.grade,o.topics.join('+'),o.level,o.progression,o.docType,o.qtype,o.mcqMode].join('|')):null;
   const topics=o.topics.slice(0,o.count);
   const per=topics.map(function(t,i){return Math.floor(o.count/topics.length)+(i<o.count%topics.length?1:0)});
   const seen=new Set();
