@@ -43,6 +43,16 @@
       .join('');
   }
 
+  // Student-facing HTML must never reveal which multiple-choice option is right.
+  // Preserve internal engine metadata for the teacher key; strip only the
+  // presentation marker at the output boundary, not the underlying choices.
+  E.studentQuestionHTML = function(html){
+    return String(html == null ? '' : html).replace(/class="([^"]*)"/g, function(match, classes){
+      if(!/(?:^|\s)mcq-choice(?:\s|$)/.test(classes)) return match;
+      return 'class="' + classes.split(/\s+/).filter(function(name){return name && name !== 'mcq-correct';}).join(' ') + '"';
+    });
+  };
+
   E.questionTypes = {
     open: function(o){ return { questionHTML:(o.svg?'<div class="diagram">'+o.svg+'</div>':'')+'<div class="qtext">'+protectMathBidi(o.question)+'</div>', answerHTML:protectMathBidi(o.answer) }; },
     mcq: function(o){
