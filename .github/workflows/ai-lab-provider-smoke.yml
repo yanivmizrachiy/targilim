@@ -12,6 +12,8 @@ on:
       - "tools/ai-lab-commands.test.mjs"
       - "tools/ai-lab-result.mjs"
       - "tools/ai-lab-result.test.mjs"
+      - "tools/ai-lab-gateway-readiness.test.mjs"
+      - "lab/api/ai-readiness.js"
   workflow_dispatch:
     inputs:
       provider:
@@ -51,7 +53,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate provider contract without calling models
-        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs tools/ai-lab-result.test.mjs
+        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs tools/ai-lab-result.test.mjs tools/ai-lab-gateway-readiness.test.mjs
   approve:
     needs: contract
     if: >-
