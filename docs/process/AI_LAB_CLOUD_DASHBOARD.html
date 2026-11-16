@@ -42,31 +42,43 @@ gatewayBtn.addEventListener('click',async function(){
     if(data.schema!=='targilim-ai-lab-readiness/v1') throw Error('תשובת שרת לא מוכרת');
     const auth=data.gateway_auth;
     const message=auth==='GATEWAY_KEY_PRESENT_NOT_VALIDATED'
-      ? 'מפתח AI Gateway נמצא בשרת, אך אינו מאומת מול הספק.'
-      : auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED'
-        ? 'אסימון OIDC נמצא בשרת, אך אינו מאומת מול Gateway.'
-        : 'לא נמצא חיבור API בסביבת השרת.';
+      ? 'מפתח AI Gateway מזוהה בשרת, אך לא אומת מול הספק.'
+      : auth==='OIDC_HEADER_PRESENT_NOT_VALIDATED'
+        ? 'כותרת OIDC נצפתה בבקשת השרת. תקפותה לא אומתה, וייתכן שהכותרת אינה מהימנה.'
+        : auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED'
+          ? 'אסימון OIDC נמצא בסביבה, אך לא אומת מול Gateway.'
+          : 'לא זוהתה דרך הזדהות ל־AI Gateway.';
     gatewayResult.textContent=message+' תקציב API לא אומת; שום מודל לא הופעל.';
   }catch(e){ gatewayResult.textContent='לא הצלחתי לאמת את חיבור ה־API: '+e.message; }
   finally{gatewayBtn.disabled=false;}
 });
 
-const target='dbec3774a32cdcfab78602240c1e1c8d676d0479';
+// Resolve current branch SHA first; never report old green CI as current.
 b.addEventListener('click',async function(){
- b.disabled=true;st.textContent='בודק תוצאות ריצות ב־GitHub...';
+ b.disabled=true;st.textContent='בודק SHA עדכני ואת בדיקות GitHub...';
  try{
- const u='https://api.github.com/repos/yanivmizrachiy/targilim/actions/runs?head_sha='+encodeURIComponent(target)+'&per_page=20';
- const resp=await fetch(u,{headers:{Accept:'application/vnd.github+json'}});
- if(!resp.ok)throw Error('HTTP '+resp.status);
- const obj=await resp.json();
- const hits=(obj.workflow_runs||[]).filter(x=>x.head_sha===target).slice(0,10);
- if(!hits.length)throw Error('לא נמצאו תוצאות עבור SHA זה');
+ const base='https://api.github.com/repos/yanivmizrachiy/targilim';
+ const options={headers:{Accept:'application/vnd.github+json'},cache:'no-store'};
+ const prResponse=await fetch(base+'/pulls/63',options);
+ if(!prResponse.ok) throw Error('פרטי PR לא זמינים ב־GitHub הציבורי (HTTP '+prResponse.status+')');
+ const pr=await prResponse.json();
+ const target=pr.head&&pr.head.sha;
+ if(!/^[a-f0-9]{40}$/i.test(target||''))throw Error('לא התקבל SHA תקין');
+ const runResponse=await fetch(base+'/actions/runs?head_sha='+encodeURIComponent(target)+'&per_page=30',options);
+ if(!runResponse.ok)throw Error('לא ניתן לקרוא בדיקות GitHub (HTTP '+runResponse.status+')');
+ const data=await runResponse.json();
+ const hits=(data.workflow_runs||[]).filter(x=>x.head_sha===target).slice(0,15);
+ if(!hits.length)throw Error('אין בדיקות זמינות ל־SHA העדכני '+target.slice(0,8));
  rows.replaceChildren();
- hits.forEach(function(x){const tr=document.createElement('tr'),td=document.createElement('td'),td2=document.createElement('td'),a=document.createElement('a');
- a.href=x.html_url;a.rel='noopener noreferrer';a.target='_blank';a.textContent=x.name||'ריצה';td.appendChild(a);
- const span=document.createElement('span');span.className='pill '+(x.conclusion==='success'?'good':x.status==='completed'?'warn':'neutral');span.textContent=x.conclusion||x.status||'לא ידוע';td2.appendChild(span);tr.append(td,td2);rows.appendChild(tr);});
- st.textContent='נתוני GitHub התקבלו ישירות כעת עבור '+hits.length+' ריצות. לא התקבלה הוכחה להפעלת מודלי AI.';
- }catch(e){st.textContent='לא ניתן לאמת כרגע נתונים חדשים: '+e.message+'. הנתונים הקודמים הם צילום מצב מתועד בלבד.';}finally{b.disabled=false;}
+ hits.forEach(function(x){
+  const tr=document.createElement('tr'),td=document.createElement('td'),td2=document.createElement('td'),a=document.createElement('a');
+  a.href=x.html_url;a.rel='noopener noreferrer';a.target='_blank';a.textContent=x.name||'ריצה';td.appendChild(a);
+  const pill=document.createElement('span');pill.className='pill '+(x.conclusion==='success'?'good':x.status==='completed'?'warn':'neutral');
+  pill.textContent=x.conclusion||x.status||'לא ידוע';td2.appendChild(pill);tr.append(td,td2);rows.appendChild(tr);
+ });
+ st.textContent='תוצאות GitHub עדכניות עבור SHA '+target.slice(0,8)+'. אין בכך הוכחה שהמודלים הופעלו.';
+ }catch(e){st.textContent='לא ניתן לאמת בדיקות עדכניות: '+e.message+'. רשימת ההצלחות שלמעלה היא צילום היסטורי, לא מצב נוכחי.';}
+ finally{b.disabled=false;}
 });
 })();
 </script></body></html>
