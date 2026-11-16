@@ -1,5 +1,7 @@
 name: "TARGILIM AI LAB - provider smoke (manual only)"
 on:
+  issue_comment:
+    types: [created]
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main]
@@ -39,7 +41,10 @@ jobs:
         run: node --test tools/ai-lab-provider-contract.test.mjs
   approve:
     needs: contract
-    if: github.event_name == 'workflow_dispatch' && github.actor == 'yanivmizrachiy'
+    if: >-
+      github.actor == 'yanivmizrachiy' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 62))
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
@@ -51,10 +56,21 @@ jobs:
         env:
           PROVIDER: ${{ inputs.provider }}
           APPROVAL: ${{ inputs.approval }}
+          COMMENT: ${{ github.event.comment.body }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          test "$APPROVAL" = 'I_APPROVE_ONE_CALL' || { echo 'Not approved. No model calls made.'; exit 1; }
-          case "$PROVIDER" in gemini|claude|codex) ;; *) echo 'Invalid provider'; exit 1 ;; esac
+          if [ "$EVENT_NAME" = 'issue_comment' ]; then
+            case "$COMMENT" in
+              '/ai-lab smoke gemini I_APPROVE_ONE_CALL') PROVIDER=gemini ;;
+              '/ai-lab smoke claude I_APPROVE_ONE_CALL') PROVIDER=claude ;;
+              '/ai-lab smoke codex I_APPROVE_ONE_CALL') PROVIDER=codex ;;
+              *) echo 'No exact owner-approved command; no model calls made.'; exit 1 ;;
+            esac
+          else
+            test "$APPROVAL" = 'I_APPROVE_ONE_CALL' || { echo 'Not approved. No model calls made.'; exit 1; }
+            case "$PROVIDER" in gemini|claude|codex) ;; *) echo 'Invalid provider'; exit 1 ;; esac
+          fi
           echo "provider=$PROVIDER" >> "$GITHUB_OUTPUT"
           echo "One provider smoke requested: $PROVIDER" >> "$GITHUB_STEP_SUMMARY"
   gemini:
