@@ -1,4 +1,5 @@
 name: "TARGILIM AI LAB - read-only control"
+
 on:
   issue_comment:
     types: [created]
@@ -28,27 +29,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read-only checkout (no push credentials)
+      - name: Checkout trusted main code, without push credentials
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Verify baseline and flag legacy automation
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Regression tests for the fail-closed readiness checker
+        run: node --test tools/ai-lab-preflight.test.mjs
+
+      - name: Readiness audit and machine-readable result
         shell: bash
         run: |
           set -euo pipefail
-          echo '# TARGILIM AI LAB — read-only preflight' >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No models invoked. No commits, API inference, merge, or deployment.' >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
-          test -s RULES.md
-          test -s PROJECT_STATUS.md
-          test -s docs/SOURCE_BIBLE.md
-          test -s .github/workflows/gemini-agent.yml
-          node -e "const p=require('./package.json'); if(!p.scripts['verify:deep']) process.exit(1)"
-          echo '- PASS: rules, status, source bible and verify:deep definition exist' >> "$GITHUB_STEP_SUMMARY"
-          if grep -q 'git-auto-commit-action' .github/workflows/gemini-agent.yml; then
-            echo '- BLOCKER: legacy Gemini-named workflow includes auto-commit; review before enabling agents' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo '- STATE: PREFLIGHT_ONLY — Gemini/Claude/Codex NOT CONNECTED' >> "$GITHUB_STEP_SUMMARY"
-          echo '- Follow-up: https://github.com/yanivmizrachiy/targilim/issues/62' >> "$GITHUB_STEP_SUMMARY"
+          node tools/ai-lab-preflight.mjs > "$RUNNER_TEMP/ai-lab-status.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync, appendFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const report = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'ai-lab-status.json'), 'utf8'));
+          const line = (text) => appendFileSync(process.env.GITHUB_STEP_SUMMARY, text + '\n');
+          line('# TARGILIM AI LAB — independent read-only audit');
+          line('');
+          line('**No model providers were called. No secrets, commits, PR merges or deployments.**');
+          line('');
+          line('- Repository baseline: **' + report.baseline + '**');
+          line('- Commit SHA: ' + report.checked_sha);
+          line('- Next gate: ' + report.next_gate);
+          line('');
+          line('## Checks');
+          for (const [key, value] of Object.entries(report.checks)) {
+            line('- ' + (value ? 'PASS' : 'FAIL') + ': ' + key);
+          }
+          line('');
+          line('## Risks and blockers');
+          for (const item of report.findings) line('- ' + item);
+          line('- Gemini / Claude Code / Codex: authentication and live calls **NOT VERIFIED**');
+          line('- Planning and approval: https://github.com/yanivmizrachiy/targilim/issues/62');
+          NODE
+          git diff --quiet
+          git diff --cached --quiet
+          test -z "$(git ls-files --others --exclude-standard)"
