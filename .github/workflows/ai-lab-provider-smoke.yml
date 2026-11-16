@@ -1,0 +1,133 @@
+name: "TARGILIM AI LAB - provider smoke (manual only)"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - ".github/workflows/ai-lab-provider-smoke.yml"
+      - "tools/ai-lab-provider-contract.test.mjs"
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Run exactly one provider"
+        required: true
+        type: choice
+        options: [gemini, claude, codex]
+      approval:
+        description: "Type I_APPROVE_ONE_CALL to authorize one potentially metered call"
+        required: true
+        type: string
+        default: "NOT_APPROVED"
+permissions:
+  contents: read
+concurrency:
+  group: ai-lab-provider-smoke
+  cancel-in-progress: false
+jobs:
+  contract:
+    if: github.repository == 'yanivmizrachiy/targilim'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate provider contract without calling models
+        run: node --test tools/ai-lab-provider-contract.test.mjs
+  approve:
+    needs: contract
+    if: github.event_name == 'workflow_dispatch' && github.actor == 'yanivmizrachiy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      provider: ${{ steps.gate.outputs.provider }}
+    steps:
+      - name: Require one explicitly authorized paid call
+        id: gate
+        shell: bash
+        env:
+          PROVIDER: ${{ inputs.provider }}
+          APPROVAL: ${{ inputs.approval }}
+        run: |
+          set -euo pipefail
+          test "$APPROVAL" = 'I_APPROVE_ONE_CALL' || { echo 'Not approved. No model calls made.'; exit 1; }
+          case "$PROVIDER" in gemini|claude|codex) ;; *) echo 'Invalid provider'; exit 1 ;; esac
+          echo "provider=$PROVIDER" >> "$GITHUB_OUTPUT"
+          echo "One provider smoke requested: $PROVIDER" >> "$GITHUB_STEP_SUMMARY"
+  gemini:
+    needs: approve
+    if: needs.approve.outputs.provider == 'gemini'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Gemini authentication metadata
+        shell: bash
+        env:
+          HAS_KEY: ${{ secrets.GEMINI_API_KEY != '' }}
+        run: |
+          test "$HAS_KEY" = 'true' || { echo 'BLOCKED: GEMINI_API_KEY is not configured'; exit 1; }
+      - name: Read-only Gemini pedagogical connection test
+        uses: google-github-actions/run-gemini-cli@v0
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            Read RULES.md and docs/SOURCE_BIBLE.md. Report three concrete Grade 7-8
+            pedagogical constraints with file paths. No file changes, shell commands,
+            commits, GitHub comments, or PRs. This is a one-call smoke test.
+  claude:
+    needs: approve
+    if: needs.approve.outputs.provider == 'claude'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check exactly one Claude authentication method
+        shell: bash
+        env:
+          API_PRESENT: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          OAUTH_PRESENT: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          test "$API_PRESENT:$OAUTH_PRESENT" = 'true:false' || test "$API_PRESENT:$OAUTH_PRESENT" = 'false:true' || { echo 'BLOCKED: configure exactly one Claude authentication method'; exit 1; }
+      - name: Read-only Claude engineering connection test
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Read RULES.md and PROJECT_STATUS.md. Report three exact engineering
+            constraints with file paths. Do not edit, comment, commit or open PRs.
+          claude_args: "--max-turns 2 --allowedTools Read,Glob,Grep"
+  codex:
+    needs: approve
+    if: needs.approve.outputs.provider == 'codex'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Codex authentication metadata
+        shell: bash
+        env:
+          HAS_KEY: ${{ secrets.OPENAI_API_KEY != '' }}
+        run: |
+          test "$HAS_KEY" = 'true' || { echo 'BLOCKED: OPENAI_API_KEY is not configured'; exit 1; }
+      - name: Read-only Codex verification connection test
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":read-only"
+          effort: low
+          prompt: |
+            Read RULES.md, package.json and tools/ai-lab-preflight.mjs.
+            Report three repository engineering facts with file paths.
+            Do not edit, commit, post comments or start another agent.
