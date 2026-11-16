@@ -22,12 +22,30 @@
 <div class="line"><div><b>Claude Code</b><p>כלי CLI מותקן בענן. אין הוכחת התחברות או הפעלת מודל.</p></div><span class="pill warn">ממתין</span></div>
 <div class="line"><div><b>Codex</b><p>כלי CLI מותקן בענן. אין הוכחת התחברות או הפעלת מודל.</p></div><span class="pill warn">ממתין</span></div>
 <div class="line"><div><b>Gemini</b><p>CLI לא מותקן במכונה. קיים מסלול GitHub Action ניסויי, אך לא הורץ מול ספק.</p></div><span class="pill warn">ממתין</span></div>
+<div class="line"><div><b>חיבור API מרכזי (Vercel AI Gateway)</b><p>בדיקת קיום אסימון זהות בסביבת השרת בלבד. הבדיקה אינה מאשרת תקציב ואינה מפעילה מודלים.</p></div><button type="button" id="check-gateway" class="btn">בדוק API</button></div>
+<p id="gateway-result" class="small">לא בוצעה בדיקת חיבור API בהרצה זו.</p>
+<div class="line"><div><b>תיקון מוצר: הסתרת תשובות</b><p>נבדק ב־Vercel Sandbox: בדיקת המוצר הממוקדת ו־verify:deep עברו ב־PR #69. טרם מוזג או נפרס למחולל.</p></div><a href="https://github.com/yanivmizrachiy/targilim/pull/69">PR #69</a></div>
 <div class="notice">הסוכנים עדיין לא עובדים יחד. נדרשים אימות ספקים ומגבלות הוצאה לפני הפעלת מודל. אין שינוי אוטומטי במאגר הראשי.</div></section>
 <section class="panel"><h2>איפה העבודה נשמרת?</h2><div class="line"><div><b>GitHub</b><p>מקור האמת, כל השינויים, ה־PR ומערכת הבדיקות</p></div><a href="https://github.com/yanivmizrachiy/targilim/pull/63/files">קבצים</a></div><div class="line"><div><b>Vercel Sandbox</b><p>סביבת עבודה מתחדשת · Snapshot · אינה שרת קבוע הפועל תמיד</p></div><a href="https://vercel.com/yanivs-projects-322b2b37/targilim-ai-lab">סביבה</a></div><div class="line"><div><b>יעדים ואישור אנושי</b><p>רשימת המשימות הקנונית — Issue #62</p></div><a href="https://github.com/yanivmizrachiy/targilim/issues/62">משימות</a></div></section></div></div>
 <p class="foot">דוח מצב של סביבת עבודה — לא סביבת ייצור ולא מחליף את <b>RULES.md</b>. לא הוזנו מפתחות API למכונת הענן, לא התבצעה פריסה של מחולל התרגילים החי, לא בוצע מיזוג ולא הוצא כסף על בקשת מודל. ייתכנו חיובי תשתית Sandbox לפי השימוש והמסלול בחשבון Vercel.</p></main>
 <script>
 (function(){
 const b=document.getElementById('refresh'),st=document.getElementById('api-state'),rows=document.getElementById('ci-rows');
+const gatewayBtn=document.getElementById('check-gateway'),gatewayResult=document.getElementById('gateway-result');
+gatewayBtn.addEventListener('click',async function(){
+  gatewayBtn.disabled=true;
+  gatewayResult.textContent='בודק הגדרות זהות בשרת, ללא קריאת מודל...';
+  try{
+    const res=await fetch('/api/ai-readiness',{cache:'no-store'});
+    if(!res.ok) throw Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data.schema!=='targilim-ai-lab-readiness/v1') throw Error('תשובת שרת לא מוכרת');
+    const present=data.gateway_auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED';
+    gatewayResult.textContent=(present?'אסימון OIDC נמצא בשרת (עדיין לא אומת מול API).':'אסימון OIDC לא זמין בשרת.')+' תקציב API לא אומת; שום מודל לא הופעל.';
+  }catch(e){ gatewayResult.textContent='לא הצלחתי לאמת את חיבור ה־API: '+e.message; }
+  finally{gatewayBtn.disabled=false;}
+});
+
 const target='dbec3774a32cdcfab78602240c1e1c8d676d0479';
 b.addEventListener('click',async function(){
  b.disabled=true;st.textContent='בודק תוצאות ריצות ב־GitHub...';
