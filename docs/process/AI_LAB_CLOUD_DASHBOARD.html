@@ -40,8 +40,13 @@ gatewayBtn.addEventListener('click',async function(){
     if(!res.ok) throw Error('HTTP '+res.status);
     const data=await res.json();
     if(data.schema!=='targilim-ai-lab-readiness/v1') throw Error('תשובת שרת לא מוכרת');
-    const present=data.gateway_auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED';
-    gatewayResult.textContent=(present?'אסימון OIDC נמצא בשרת (עדיין לא אומת מול API).':'אסימון OIDC לא זמין בשרת.')+' תקציב API לא אומת; שום מודל לא הופעל.';
+    const auth=data.gateway_auth;
+    const message=auth==='GATEWAY_KEY_PRESENT_NOT_VALIDATED'
+      ? 'מפתח AI Gateway נמצא בשרת, אך אינו מאומת מול הספק.'
+      : auth==='OIDC_TOKEN_PRESENT_NOT_VALIDATED'
+        ? 'אסימון OIDC נמצא בשרת, אך אינו מאומת מול Gateway.'
+        : 'לא נמצא חיבור API בסביבת השרת.';
+    gatewayResult.textContent=message+' תקציב API לא אומת; שום מודל לא הופעל.';
   }catch(e){ gatewayResult.textContent='לא הצלחתי לאמת את חיבור ה־API: '+e.message; }
   finally{gatewayBtn.disabled=false;}
 });
