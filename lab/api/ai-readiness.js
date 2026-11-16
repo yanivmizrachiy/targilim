@@ -4,9 +4,11 @@ export function collectReadiness(env = {}) {
   return {
     schema: 'targilim-ai-lab-readiness/v1',
     project: 'targilim-ai-lab',
-    gateway_auth: typeof env.VERCEL_OIDC_TOKEN === 'string' && env.VERCEL_OIDC_TOKEN.length > 0
-      ? 'OIDC_TOKEN_PRESENT_NOT_VALIDATED'
-      : 'OIDC_TOKEN_NOT_AVAILABLE',
+    gateway_auth: typeof env.AI_GATEWAY_API_KEY === 'string' && env.AI_GATEWAY_API_KEY.length > 0
+      ? 'GATEWAY_KEY_PRESENT_NOT_VALIDATED'
+      : (typeof env.VERCEL_OIDC_TOKEN === 'string' && env.VERCEL_OIDC_TOKEN.length > 0
+        ? 'OIDC_TOKEN_PRESENT_NOT_VALIDATED'
+        : 'GATEWAY_AUTH_NOT_AVAILABLE'),
     gateway_account_verified: false,
     gateway_budget_verified: false,
     provider_auth_verified: { gemini: false, claude: false, codex: false },
