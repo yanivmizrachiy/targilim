@@ -10,6 +10,8 @@ on:
       - "tools/ai-lab-provider-contract.test.mjs"
       - "tools/ai-lab-commands.mjs"
       - "tools/ai-lab-commands.test.mjs"
+      - "tools/ai-lab-result.mjs"
+      - "tools/ai-lab-result.test.mjs"
   workflow_dispatch:
     inputs:
       provider:
@@ -49,7 +51,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate provider contract without calling models
-        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs
+        run: node --test tools/ai-lab-provider-contract.test.mjs tools/ai-lab-commands.test.mjs tools/ai-lab-result.test.mjs
   approve:
     needs: contract
     if: >-
@@ -94,6 +96,7 @@ jobs:
         run: |
           test "$HAS_KEY" = 'true' || { echo 'BLOCKED: GEMINI_API_KEY is not configured'; exit 1; }
       - name: Read-only Gemini pedagogical connection test
+        id: model
         uses: google-github-actions/run-gemini-cli@v0
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
@@ -104,6 +107,15 @@ jobs:
             pedagogical constraints with file paths. No file changes, shell commands,
             commits, GitHub comments, or PRs. The Gemini tool allowlist permits
             read-only repository inspection only. This is a one-call smoke test.
+
+      - name: Publish bounded Gemini result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: gemini
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_MODEL_OUTPUT: ${{ steps.model.outputs.summary }}
+        run: node tools/ai-lab-result.mjs
   claude:
     needs: approve
     if: needs.approve.outputs.provider == 'claude'
@@ -122,6 +134,7 @@ jobs:
           set -euo pipefail
           test "$API_PRESENT:$OAUTH_PRESENT" = 'true:false' || test "$API_PRESENT:$OAUTH_PRESENT" = 'false:true' || { echo 'BLOCKED: configure exactly one Claude authentication method'; exit 1; }
       - name: Read-only Claude engineering connection test
+        id: model
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -130,6 +143,15 @@ jobs:
             Read RULES.md and PROJECT_STATUS.md. Report three exact engineering
             constraints with file paths. Do not edit, comment, commit or open PRs.
           claude_args: "--max-turns 2 --max-budget-usd 0.50 --allowedTools Read,Glob,Grep"
+
+      - name: Publish bounded Claude result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: claude
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_CLAUDE_FILE: ${{ steps.model.outputs.execution_file }}
+        run: node tools/ai-lab-result.mjs
   codex:
     needs: approve
     if: needs.approve.outputs.provider == 'codex'
@@ -146,6 +168,7 @@ jobs:
         run: |
           test "$HAS_KEY" = 'true' || { echo 'BLOCKED: OPENAI_API_KEY is not configured'; exit 1; }
       - name: Read-only Codex verification connection test
+        id: model
         uses: openai/codex-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -155,3 +178,12 @@ jobs:
             Read RULES.md, package.json and tools/ai-lab-preflight.mjs.
             Report three repository engineering facts with file paths.
             Do not edit, commit, post comments or start another agent.
+
+      - name: Publish bounded Codex result for GPT readback
+        if: success()
+        shell: bash
+        env:
+          AI_LAB_PROVIDER: codex
+          AI_LAB_ACTION_STATUS: ${{ steps.model.outcome }}
+          AI_LAB_MODEL_OUTPUT: ${{ steps.model.outputs['final-message'] }}
+        run: node tools/ai-lab-result.mjs
