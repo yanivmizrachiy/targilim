@@ -150,8 +150,9 @@ try {
       await app.goto(origin + '/index.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
       await app.waitForFunction(
         () => document.querySelector('#st option[value="G7-03-ENGINE"]') &&
-              document.querySelector('#st option[value="N7-03-ENGINE"]'),
-        { timeout: 15000 },
+              typeof window.generate === 'function' &&
+              typeof window.TargilimEngine?.getEngineExercise === 'function',
+        null, { timeout: 15000 },
       );
       for (const selection of [
         { domain: 'geometry', topic: 'G7-03-ENGINE' },
