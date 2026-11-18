@@ -45,6 +45,7 @@
     "verify:workbench": "npm run verify:sync && npm run verify:all && npm run verify:premium-ui && npm run verify:graphics-quality && npm run verify:multi-correct && npm run verify:copy-export && npm run verify:worksheet-polish",
     "verify:deep": "npm run verify:all && npm run verify:coverage && npm run verify:stress && npm run verify:variety && npm run verify:visual && npm run verify:family && npm run verify:followups && npm run verify:graphics-quality && npm run verify:visual-coverage && npm run verify:copy-export && npm run verify:premium-ui && npm run verify:worksheet-polish && npm run verify:multi-correct && npm run verify:print-layout && npm run verify:release-docs",
     "verify:student-answer-visibility": "node tools/verify-student-answer-visibility.mjs",
-    "verify:engine-integrity": "node tools/verify-engine-integrity.mjs"
+    "verify:engine-integrity": "node tools/verify-engine-integrity.mjs",
+    "verify:browser-print": "node tools/verify-browser-print.mjs"
   }
 }
