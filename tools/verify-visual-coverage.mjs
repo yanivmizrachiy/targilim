@@ -14,6 +14,8 @@
 // only reported (not failed). By default this is read-only; pass --write or set
 // TARGILIM_UPDATE_REPORTS=1 to refresh docs/reports/VISUAL_COVERAGE_MATRIX.json.
 // Run from repo root.
+// Includes the independent 50-engine SVG accessible-name regression (Issues #54/#55).
+import './verify-svg-accessible-names.mjs';
 import fs from 'node:fs';
 import { loadEngines } from './engine-load.mjs';
 
