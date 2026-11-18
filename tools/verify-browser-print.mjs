@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { createServer } from 'node:http';
+import { readFileSync, statSync } from 'node:fs';
+import { extname, sep } from 'node:path';
 
 const candidates = [
   process.env.CHROME_PATH,
@@ -117,6 +120,80 @@ try {
     } finally {
       await page.close();
     }
+  }
+  // End-to-end smoke on the actual index.html (not a synthetic page fixture):
+  // local-only static HTTP server loads the full shipped script chain and calls
+  // the visible student generator controls. External CDN resources are excluded
+  // so the QA result is deterministic. It does not validate KaTeX visual layout.
+  const webRoot = resolve('generator');
+  const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
+  const server = createServer((req, res) => {
+    try {
+      const pathname = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
+      const filePath = resolve(webRoot, '.' + (pathname === '/' ? '/index.html' : pathname));
+      if (!filePath.startsWith(webRoot + sep)) { res.writeHead(403); res.end(); return; }
+      if (!statSync(filePath).isFile()) { res.writeHead(404); res.end(); return; }
+      const content = readFileSync(filePath);
+      res.writeHead(200, { 'content-type': mime[extname(filePath)] || 'application/octet-stream' });
+      res.end(content);
+    } catch { res.writeHead(404); res.end(); }
+  });
+  await new Promise((ok, fail) => { server.once('error', fail); server.listen(0, '127.0.0.1', ok); });
+  try {
+    const origin = 'http://127.0.0.1:' + server.address().port;
+    const app = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    try {
+      // Only remote CDN rendering is mocked; the full app, 50-engine registry,
+      // topic selector, generate button and worksheet rendering run for real.
+      await app.route(/^https?:\/\/(?!127\.0\.0\.1)/, route => route.abort());
+      await app.addInitScript(() => { window.renderMathInElement = () => {}; });
+      await app.goto(origin + '/index.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await app.waitForFunction(
+        () => document.querySelector('#st option[value="G7-03-ENGINE"]') &&
+              document.querySelector('#st option[value="N7-03-ENGINE"]'),
+        { timeout: 15000 },
+      );
+      for (const selection of [
+        { domain: 'geometry', topic: 'G7-03-ENGINE' },
+        { domain: 'numeric', topic: 'N7-03-ENGINE' },
+      ]) {
+        await app.selectOption('#sg', '7');
+        await app.selectOption('#sd', selection.domain);
+        await app.selectOption('#st', selection.topic);
+        await app.selectOption('#sn', '6');
+        await app.selectOption('#sl', 'standard');
+        await app.selectOption('#selQType', 'mcq');
+        await app.click('.btn-gen');
+        const count = await app.locator('#exset .ex-card').count();
+        assert.equal(count, 6, 'real generate button must create six cards for ' + selection.topic);
+        const studentChoices = await app.locator('#exset .ex-body .mcq-choice').count();
+        assert.ok(studentChoices >= 6, 'real generator must create MCQ choices for ' + selection.topic);
+        assert.equal(await app.locator('#exset .ex-body .mcq-correct').count(), 0,
+          'real generated questions must never reveal the correct option');
+        assert.equal(await app.locator('#answerKey .ak-item').count(), 6,
+          'real generated worksheet must have six teacher solutions');
+        const bounds = await app.evaluate(() => ({
+          viewport: innerWidth, body: document.body.scrollWidth,
+          document: document.documentElement.scrollWidth,
+        }));
+        assert.ok(bounds.body <= bounds.viewport && bounds.document <= bounds.viewport,
+          'real app mobile horizontal overflow: ' + JSON.stringify(bounds));
+        await app.emulateMedia({ media: 'print' });
+        assert.equal(await app.locator('#answerKey').evaluate(el => getComputedStyle(el).display),
+          'none', 'real generated student print hides teacher key');
+        const pdf = await app.pdf({ format: 'A4', printBackground: true });
+        assert.ok(pdf.subarray(0, 5).toString() === '%PDF-' && pdf.length > 2000,
+          'real generated six-question A4 print is a PDF');
+        console.log('FULL_GENERATOR_BROWSER_PASS topic=' + selection.topic +
+          ' cards=6 choices=' + studentChoices + ' teacher_keys=6 mobile_overflow=0' +
+          ' a4_pdf_bytes=' + pdf.length);
+        await app.emulateMedia({ media: 'screen' });
+      }
+    } finally {
+      await app.close();
+    }
+  } finally {
+    await new Promise(ok => server.close(ok));
   }
   success = true;
 } finally {
