@@ -73,8 +73,8 @@
     return s;
   }
   function choose(cands,key){ cands.sort((a,b)=>b.score-a.score); return cands[key % Math.min(12,cands.length)]; }
-  function svg(W,H,body){
-    return `<svg class="engine-svg ultra-geo-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" shape-rendering="geometricPrecision" text-rendering="geometricPrecision"><defs><filter id="ultraGeoShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.1" flood-color="#0f172a" flood-opacity="0.13"/></filter></defs><g vector-effect="non-scaling-stroke">${body}</g></svg>`;
+  function svg(W,H,body,accessibleName){
+    return `<svg class="engine-svg ultra-geo-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(accessibleName)}" shape-rendering="geometricPrecision" text-rendering="geometricPrecision"><defs><filter id="ultraGeoShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.1" flood-color="#0f172a" flood-opacity="0.13"/></filter></defs><g vector-effect="non-scaling-stroke">${body}</g></svg>`;
   }
   function halo(x,y,text,color,size=14,weight=850){
     return `<text x="${fmt(x)}" y="${fmt(y)}" fill="${color}" font-size="${size}" font-weight="${weight}" text-anchor="middle" dominant-baseline="middle" style="paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round">${esc(text)}</text>`;
@@ -133,7 +133,7 @@
       dots+=`<circle cx="${fmt(d.v.x)}" cy="${fmt(d.v.y)}" r="2.15" fill="${U.stroke}"/>`;
     });
     const poly=best.V.map(q=>`${fmt(q.x)},${fmt(q.y)}`).join(' ');
-    return svg(W,H,`<polygon points="${poly}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" stroke-linejoin="round" filter="url(#ultraGeoShadow)"/>${arcs}${dots}${labels}${letters}`);
+    return svg(W,H,`<polygon points="${poly}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" stroke-linejoin="round" filter="url(#ultraGeoShadow)"/>${arcs}${dots}${labels}${letters}`, 'משולש עם זוויות מסומנות');
   };
 
   E.rightTriangleSvg = function(params, unknown){
@@ -154,14 +154,14 @@
     const texts=[params.a==null?'?':params.a+' ס״מ', params.b==null?'?':params.b+' ס״מ', params.c==null?'?':params.c+' ס״מ'];
     const cols=[unknown==='a'?U.unknown:U.given, unknown==='b'?U.unknown:U.given, unknown==='c'?U.unknown:U.given];
     const poly=`${fmt(A.x)},${fmt(A.y)} ${fmt(B.x)},${fmt(B.y)} ${fmt(C.x)},${fmt(C.y)}`;
-    return svg(W,H,`<polygon points="${poly}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" stroke-linejoin="round" filter="url(#ultraGeoShadow)"/>${rightMark(B,A,C)}<circle cx="${fmt(A.x)}" cy="${fmt(A.y)}" r="2.15" fill="${U.stroke}"/><circle cx="${fmt(B.x)}" cy="${fmt(B.y)}" r="2.15" fill="${U.stroke}"/><circle cx="${fmt(C.x)}" cy="${fmt(C.y)}" r="2.15" fill="${U.stroke}"/>${halo(b.labels[0].x,b.labels[0].y,texts[0],cols[0],13,850)}${halo(b.labels[1].x,b.labels[1].y,texts[1],cols[1],13,850)}${halo(b.labels[2].x,b.labels[2].y,texts[2],cols[2],13,900)}${halo(b.letters[0].x,b.letters[0].y,'A',U.label,16,900)}${halo(b.letters[1].x,b.letters[1].y,'B',U.label,16,900)}${halo(b.letters[2].x,b.letters[2].y,'C',U.label,16,900)}`);
+    return svg(W,H,`<polygon points="${poly}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" stroke-linejoin="round" filter="url(#ultraGeoShadow)"/>${rightMark(B,A,C)}<circle cx="${fmt(A.x)}" cy="${fmt(A.y)}" r="2.15" fill="${U.stroke}"/><circle cx="${fmt(B.x)}" cy="${fmt(B.y)}" r="2.15" fill="${U.stroke}"/><circle cx="${fmt(C.x)}" cy="${fmt(C.y)}" r="2.15" fill="${U.stroke}"/>${halo(b.labels[0].x,b.labels[0].y,texts[0],cols[0],13,850)}${halo(b.labels[1].x,b.labels[1].y,texts[1],cols[1],13,850)}${halo(b.labels[2].x,b.labels[2].y,texts[2],cols[2],13,900)}${halo(b.letters[0].x,b.letters[0].y,'A',U.label,16,900)}${halo(b.letters[1].x,b.letters[1].y,'B',U.label,16,900)}${halo(b.letters[2].x,b.letters[2].y,'C',U.label,16,900)}`, 'משולש ישר־זווית עם צלעות מסומנות');
   };
 
   E.rectangleSvg = function(r, unknown){
     const W=410,H=280,l=n(r.l,12),w=n(r.w,6),ratio=Math.max(0.34,Math.min(0.78,w/Math.max(l,1)));
     const rw=260,rh=Math.round(rw*ratio*0.72),x=(W-rw)/2,y=(H-rh)/2;
     const cL=unknown==='l'?U.unknown:U.given, cW=unknown==='w'?U.unknown:U.given;
-    return svg(W,H,`<rect x="${fmt(x)}" y="${fmt(y)}" width="${fmt(rw)}" height="${fmt(rh)}" rx="8" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" filter="url(#ultraGeoShadow)"/><line x1="${fmt(x)}" y1="${fmt(y+rh+22)}" x2="${fmt(x+rw)}" y2="${fmt(y+rh+22)}" stroke="${U.helper}" stroke-width="1.5"/><line x1="${fmt(x-24)}" y1="${fmt(y)}" x2="${fmt(x-24)}" y2="${fmt(y+rh)}" stroke="${U.helper}" stroke-width="1.5"/>${halo(x+rw/2,y+rh+22,unknown==='l'?'?':l+' ס״מ',cL,13,850)}${halo(x-24,y+rh/2,unknown==='w'?'?':w+' ס״מ',cW,13,850)}`);
+    return svg(W,H,`<rect x="${fmt(x)}" y="${fmt(y)}" width="${fmt(rw)}" height="${fmt(rh)}" rx="8" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" filter="url(#ultraGeoShadow)"/><line x1="${fmt(x)}" y1="${fmt(y+rh+22)}" x2="${fmt(x+rw)}" y2="${fmt(y+rh+22)}" stroke="${U.helper}" stroke-width="1.5"/><line x1="${fmt(x-24)}" y1="${fmt(y)}" x2="${fmt(x-24)}" y2="${fmt(y+rh)}" stroke="${U.helper}" stroke-width="1.5"/>${halo(x+rw/2,y+rh+22,unknown==='l'?'?':l+' ס״מ',cL,13,850)}${halo(x-24,y+rh/2,unknown==='w'?'?':w+' ס״מ',cW,13,850)}`, 'מלבן עם אורך ורוחב מסומנים');
   };
 
   E.circleSvg = function(c, unknown){
@@ -170,6 +170,6 @@
     const ex=p(cx+R*Math.cos(deg),cy+R*Math.sin(deg)), ox=p(cx-R*Math.cos(deg),cy-R*Math.sin(deg));
     const base=mode==='d'?p(cx,cy-27):mid(p(cx,cy),ex), shift=p(-Math.sin(deg)*22,Math.cos(deg)*22);
     const value=mode==='d'?(c.d==null?'?':c.d+' ס״מ'):(c.r==null?'?':c.r+' ס״מ');
-    return svg(W,H,`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" filter="url(#ultraGeoShadow)"/><circle cx="${cx}" cy="${cy}" r="3.4" fill="${U.stroke}"/>${mode==='d'?`<line x1="${fmt(ox.x)}" y1="${fmt(ox.y)}" x2="${fmt(ex.x)}" y2="${fmt(ex.y)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`:`<line x1="${cx}" y1="${cy}" x2="${fmt(ex.x)}" y2="${fmt(ex.y)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`}<circle cx="${fmt(ex.x)}" cy="${fmt(ex.y)}" r="4" fill="${color}"/>${mode==='d'?`<circle cx="${fmt(ox.x)}" cy="${fmt(ox.y)}" r="4" fill="${color}"/>`:''}${halo(base.x+shift.x,base.y+shift.y,value,color,13,880)}`);
+    return svg(W,H,`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${U.fill}" stroke="${U.stroke}" stroke-width="2.9" filter="url(#ultraGeoShadow)"/><circle cx="${cx}" cy="${cy}" r="3.4" fill="${U.stroke}"/>${mode==='d'?`<line x1="${fmt(ox.x)}" y1="${fmt(ox.y)}" x2="${fmt(ex.x)}" y2="${fmt(ex.y)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`:`<line x1="${cx}" y1="${cy}" x2="${fmt(ex.x)}" y2="${fmt(ex.y)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`}<circle cx="${fmt(ex.x)}" cy="${fmt(ex.y)}" r="4" fill="${color}"/>${mode==='d'?`<circle cx="${fmt(ox.x)}" cy="${fmt(ox.y)}" r="4" fill="${color}"/>`:''}${halo(base.x+shift.x,base.y+shift.y,value,color,13,880)}`, 'מעגל עם רדיוס או קוטר מסומן');
   };
 })();
