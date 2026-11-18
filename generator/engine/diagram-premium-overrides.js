@@ -148,11 +148,12 @@
       dominant-baseline="middle"
       style="paint-order:stroke;stroke:#ffffff;stroke-width:4.8px;stroke-linejoin:round">${esc(text)}</text>`;
   }
-  function svgFrame(W,H,body){
+  function svgFrame(W,H,body,accessibleName){
     return `<svg class="engine-svg premium-geo-svg"
       viewBox="0 0 ${W} ${H}"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
+      aria-label="${esc(accessibleName)}"
       shape-rendering="geometricPrecision"
       text-rendering="geometricPrecision">
       <defs>
@@ -313,7 +314,7 @@
       ${dots}
       ${labels}
       ${letters}
-    `);
+    `, 'משולש עם זוויות מסומנות');
   };
 
   E.rightTriangleSvg = function(params, unknown){
@@ -396,7 +397,7 @@
       ${plainHaloText(letterPts[0].x,letterPts[0].y,'A',P.label,16,850)}
       ${plainHaloText(letterPts[1].x,letterPts[1].y,'B',P.label,16,850)}
       ${plainHaloText(letterPts[2].x,letterPts[2].y,'C',P.label,16,850)}
-    `);
+    `, 'משולש ישר־זווית. צלע א: ' + la + ', צלע ב: ' + lb + ', היתר: ' + lc);
   };
 
 
@@ -429,7 +430,7 @@
       <line x1="${fmt(D.x-29)}" y1="${fmt(D.y)}" x2="${fmt(D.x-15)}" y2="${fmt(D.y)}" stroke="${P.helper}" stroke-width="1.5"/>
       ${plainHaloText((A.x+B.x)/2, C.y+20, lText, cL, 13, 830)}
       ${plainHaloText(D.x-22, (A.y+D.y)/2, wText, cW, 13, 830)}
-    `);
+    `, 'מלבן. אורך: ' + lText + ', רוחב: ' + wText);
   };
 
 
@@ -466,7 +467,7 @@
       <circle cx="${fmt(ex.x)}" cy="${fmt(ex.y)}" r="4" fill="${color}"/>
       ${mode === 'd' ? `<circle cx="${fmt(ox.x)}" cy="${fmt(ox.y)}" r="4" fill="${color}"/>` : ''}
       ${plainHaloText(labelBase.x + labelShift.x, labelBase.y + labelShift.y, value, color, 13, 850)}
-    `);
+    `, 'מעגל. ' + (mode === 'd' ? 'קוטר: ' : 'רדיוס: ') + value);
   };
 
 })();
