@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { PDFDocument } from 'pdf-lib';
 import { createServer } from 'node:http';
 import { readFileSync, statSync } from 'node:fs';
 import { extname, sep } from 'node:path';
@@ -121,10 +122,10 @@ try {
       await page.close();
     }
   }
-  // End-to-end smoke on the actual index.html (not a synthetic page fixture):
-  // local-only static HTTP server loads the full shipped script chain and calls
-  // the visible student generator controls. External CDN resources are excluded
-  // so the QA result is deterministic. It does not validate KaTeX visual layout.
+  // End-to-end smoke on the actual index.html with real (locally served)
+  // KaTeX 0.16.9 CSS, JavaScript and math fonts. Other remote assets remain
+  // blocked, so this verifies real equations without remote network calls.
+  // The visible student generator, all engine scripts and print CSS are real.
   const webRoot = resolve('generator');
   const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
   const server = createServer((req, res) => {
@@ -143,11 +144,25 @@ try {
     const origin = 'http://127.0.0.1:' + server.address().port;
     const app = await browser.newPage({ viewport: { width: 390, height: 844 } });
     try {
-      // Only remote CDN rendering is mocked; the full app, 50-engine registry,
-      // topic selector, generate button and worksheet rendering run for real.
+      // Keep the test hermetic: serve the exact KaTeX CDN version requested by
+      // index.html from installed npm files, including the font assets. Block
+      // all other third-party requests; do not silently skip math rendering.
       await app.route(/^https?:\/\/(?!127\.0\.0\.1)/, route => route.abort());
-      await app.addInitScript(() => { window.renderMathInElement = () => {}; });
+      const katexRoot = resolve('node_modules/katex/dist');
+      await app.route('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/**', route => {
+        const url = route.request().url();
+        const relativePath = decodeURIComponent(url.split('/0.16.9/')[1] || '');
+        const filePath = resolve(katexRoot, relativePath);
+        if (!filePath.startsWith(katexRoot + sep) || !existsSync(filePath)) {
+          return route.abort('failed');
+        }
+        return route.fulfill({ path: filePath });
+      });
       await app.goto(origin + '/index.html', { waitUntil: 'domcontentloaded', timeout: 30000 });
+      assert.equal(await app.evaluate(() => typeof window.renderMathInElement), 'function',
+        'the actual KaTeX auto-render script must load');
+      assert.equal(await app.evaluate(() => typeof window.katex?.render), 'function',
+        'the actual KaTeX engine must load');
       await app.waitForFunction(
         () => document.querySelector('#st option[value="G7-03-ENGINE"]') &&
               typeof window.generate === 'function' &&
@@ -182,11 +197,30 @@ try {
         await app.emulateMedia({ media: 'print' });
         assert.equal(await app.locator('#answerKey').evaluate(el => getComputedStyle(el).display),
           'none', 'real generated student print hides teacher key');
+        const katexFormulaCount = await app.locator('#exset .ex-body .katex').count();
+        const katexErrorCount = await app.locator('#exset .ex-body .katex-error').count();
+        assert.ok(katexFormulaCount > 0,
+          'real generated ' + selection.topic + ' exercise must typeset mathematical formulas with KaTeX');
+        assert.equal(katexErrorCount, 0,
+          'real generated math must not show KaTeX error messages in student print');
+        const diagramCount = await app.locator('#exset .ex-body svg').count();
+        if (selection.domain === 'geometry') {
+          assert.ok(diagramCount > 0, 'real geometry exercises must include a drawing');
+        }
+        await app.evaluate(() => document.fonts.ready);
         const pdf = await app.pdf({ format: 'A4', printBackground: true });
         assert.ok(pdf.subarray(0, 5).toString() === '%PDF-' && pdf.length > 2000,
           'real generated six-question A4 print is a PDF');
+        const parsed = await PDFDocument.load(pdf);
+        assert.ok(parsed.getPageCount() >= 1 && parsed.getPageCount() <= 12,
+          'A4 pages must be parseable without uncontrolled pagination');
+        const pdfSize = parsed.getPage(0).getSize();
+        assert.ok(Math.abs(pdfSize.width - 595.28) < 1 && Math.abs(pdfSize.height - 841.89) < 1,
+          'PDF page must physically be A4');
         console.log('FULL_GENERATOR_BROWSER_PASS topic=' + selection.topic +
           ' cards=6 choices=' + studentChoices + ' teacher_keys=6 mobile_overflow=0' +
+          ' real_katex=' + katexFormulaCount + ' katex_errors=' + katexErrorCount +
+          ' svg=' + diagramCount + ' a4_pages=' + parsed.getPageCount() +
           ' a4_pdf_bytes=' + pdf.length);
         await app.emulateMedia({ media: 'screen' });
       }
