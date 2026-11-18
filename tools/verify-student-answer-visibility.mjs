@@ -95,5 +95,71 @@ for (const id of ids) {
 assert.ok(checked >= 900, 'actual MCQ QA coverage too low: only ' + checked + ' samples');
 assert.ok(originallyMarked >= checked, 'at least one teacher correctness marker expected per sampled MCQ');
 assert.equal(alteredNonMarkerText, 0, 'sanitizer unexpectedly removed options');
+
+// Rendered worksheet regression transferred from superseded PR #64:
+// assert actual student/teacher section separation, not just engine metadata.
+function checkRenderedWorksheetKey(correctIndices, expectedKey) {
+  const out = { innerHTML: '' };
+  const uiContext = {
+    console, Math, Date, generators: {},
+    TOPICS: {
+      7: { numeric: [], algebra: [], geometry: [], uncertainty: [] },
+      8: { numeric: [], algebra: [], geometry: [], uncertainty: [] }
+    },
+    document: {
+      querySelector: () => ({}),
+      getElementById: id => id === 'out' ? out :
+        { value: '', style: {}, addEventListener() {} },
+      createElement: () => ({ rel: '', href: '' }),
+      head: { appendChild() {} }, body: { appendChild() {} }
+    },
+    setMainTitle() {}, renderMathInElement() {},
+    addEventListener() {}, onDomain() {}, onGrade() {}
+  };
+  uiContext.window = uiContext;
+  vm.createContext(uiContext);
+  for (const name of [
+    'generator/engine/question-types.js',
+    'generator/engine/pattern-engine.js',
+    'generator/exercise-set.js'
+  ]) {
+    vm.runInContext(read(name), uiContext, { filename: name });
+  }
+  const choices = ['2', '3', '4'].map((text, i) => ({
+    label: ['א', 'ב', 'ג'][i], text, correct: correctIndices.includes(i)
+  }));
+  const question = uiContext.TargilimEngine.questionTypes.mcq({
+    question: 'בחרו תשובות נכונות', answer: 'פתרון למורה בלבד',
+    choices
+  });
+  const fixture = { ...question, qtype: 'mcq' };
+  uiContext.fixture = fixture;
+  vm.runInContext(
+    "renderExerciseSet({topicLabel:'בדיקת מפתח',cls:'num',gradeLabel:'ז',domainLabel:'מספרי',diffLabel:'רמה 2'},[fixture])",
+    uiContext
+  );
+  const full = out.innerHTML;
+  const sections = full.split('<div class="answer-key" id="answerKey">');
+  assert.equal(sections.length, 2, 'exactly one separate teacher answer-key section');
+  const student = sections[0];
+  const teacher = sections[1];
+  assert.doesNotMatch(student, /mcq-correct/, 'student DOM must not mark correct options');
+  assert.equal((student.match(/class="mcq-choice"/g) || []).length, choices.length,
+    'every student choice survives rendering');
+  assert.match(teacher, /class="ak-body">פתרון למורה בלבד/,
+    'teacher explanation remains in the separate answer key');
+  assert.ok(teacher.includes(expectedKey),
+    'teacher key must contain all correct letters: ' + expectedKey);
+  assert.doesNotMatch(student, /פתרון למורה בלבד/,
+    'teacher explanation is not duplicated in worksheet student card');
+  uiContext.TargilimEngine.renderEngineCard('N7-03-ENGINE', 'בדיקת כרטיס', question);
+  const cardQuestion = out.innerHTML.split('<button class="btn-ans"')[0];
+  assert.doesNotMatch(cardQuestion, /mcq-correct/,
+    'single-question student DOM also removes answer hints');
+}
+checkRenderedWorksheetKey([0], 'התשובה הנכונה: א');
+checkRenderedWorksheetKey([0, 2], 'התשובות הנכונות: א, ג');
+console.log('RENDERED_STUDENT_TEACHER_KEY_PASS — single/multi correct and one key section');
+
 console.log('STUDENT_ANSWER_SWEEP_PASS — ' + checked + ' actual MCQs, '
   + originallyMarked + ' internal correct markers protected, 50 engines, 3 difficulties');

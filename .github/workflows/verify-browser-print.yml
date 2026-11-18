@@ -1,0 +1,60 @@
+name: Verify Targilim Browser Print
+
+on:
+  pull_request:
+    branches:
+      - main
+      - fix/student-answer-visibility-20261116
+    paths:
+      - 'generator/**'
+      - 'tools/verify-browser-print.mjs'
+      - '.github/workflows/verify-browser-print.yml'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-print-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-print:
+    name: Chromium A4 RTL answer visibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out exact PR commit
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Ensure real Chromium is installed (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v google-chrome >/dev/null 2>&1; then
+            google-chrome --version
+          elif command -v google-chrome-stable >/dev/null 2>&1; then
+            google-chrome-stable --version
+          elif command -v chromium >/dev/null 2>&1; then
+            chromium --version
+          else
+            echo "ERROR: No Chrome/Chromium on runner. Browser test must not be skipped."
+            exit 1
+          fi
+
+      - name: Install read-only browser test dependency
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1 katex@0.16.9 pdf-lib@1.17.1
+
+      - name: Run real A4 print and student-key isolation checks
+        run: npm run verify:browser-print
+
+      - name: Check that verification did not edit tracked repository files
+        run: |
+          git diff --quiet
+          git diff --cached --quiet
