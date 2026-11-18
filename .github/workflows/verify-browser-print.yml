@@ -49,7 +49,7 @@ jobs:
           fi
 
       - name: Install read-only browser test dependency
-        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1 katex@0.16.9 pdf-lib@1.17.1
 
       - name: Run real A4 print and student-key isolation checks
         run: npm run verify:browser-print
